@@ -499,6 +499,13 @@ textarea {
   max-width: 72px;
 }
 
+/* Marca en espera: caerá sobre la próxima vocal que la admita. */
+.tecla--pendiente {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
 /* --- Camino -------------------------------------------------------------- */
 
 .camino {

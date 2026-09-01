@@ -153,30 +153,93 @@ export const DIACRITIC_KEYS: { name: DiacriticName; label: string; hint: string 
 ]
 
 /**
+ * Qué letras admite cada diacrítico. El griego no acentúa consonantes, ε y ο
+ * nunca llevan circunflejo por ser breves, y la iota suscrita solo cabe bajo
+ * las vocales largas. La ρ es el único caso raro: admite espíritu (ῥ, ῤ).
+ */
+const ADMITE: Record<DiacriticName, string> = {
+  agudo: 'αεηιουω',
+  grave: 'αεηιουω',
+  circunflejo: 'αηιυω',
+  suave: 'αεηιουωρ',
+  aspero: 'αεηιουωρ',
+  iota: 'αηω',
+  dieresis: 'ιυ',
+}
+
+/** Marcas que se excluyen entre sí: poner una retira la otra. */
+const EXCLUYENTES: DiacriticName[][] = [
+  ['agudo', 'grave', 'circunflejo'],
+  ['suave', 'aspero'],
+]
+
+/**
+ * Orden canónico de las marcas: espíritu o diéresis, luego el acento y por
+ * último la iota suscrita. Espíritus y acentos comparten clase combinante, así
+ * que Unicode no los reordena y α+grave+suave no compondría ἂ. Hay que
+ * colocarlos nosotros.
+ */
+const ORDEN: Record<string, number> = {
+  [COMBINING.dieresis]: 0,
+  [COMBINING.suave]: 0,
+  [COMBINING.aspero]: 0,
+  [COMBINING.agudo]: 1,
+  [COMBINING.grave]: 1,
+  [COMBINING.circunflejo]: 1,
+  [COMBINING.iota]: 2,
+}
+
+function ordenarMarcas(marks: string): string {
+  return [...marks].sort((a, b) => (ORDEN[a] ?? 9) - (ORDEN[b] ?? 9)).join('')
+}
+
+/** Letra base del final del texto, sin sus marcas, o `null` si no hay. */
+function ultimaLetra(text: string): string | null {
+  const decomposed = text.normalize('NFD')
+  let i = decomposed.length
+  while (i > 0 && IS_COMBINING.test(decomposed[i - 1]!)) i--
+  if (i === 0) return null
+  return decomposed[i - 1]!.toLowerCase()
+}
+
+/** ¿Puede este diacrítico caer sobre la última letra escrita? */
+export function canApplyDiacritic(text: string, diacritic: DiacriticName): boolean {
+  const letra = ultimaLetra(text)
+  return letra !== null && ADMITE[diacritic].includes(letra)
+}
+
+/**
  * Aplica un diacrítico al último carácter del texto.
  *
  * Descompone, inserta la marca combinante y vuelve a componer, de modo que
  * α + suave + agudo produce ἄ. Si el carácter ya llevaba esa marca, la quita:
- * pulsar dos veces deshace.
+ * pulsar dos veces deshace. Si la letra no admite ese diacrítico —un acento
+ * sobre una consonante, por ejemplo— el texto se devuelve intacto.
  */
 export function applyDiacritic(text: string, diacritic: DiacriticName): string {
-  if (!text) return text
+  if (!text || !canApplyDiacritic(text, diacritic)) return text
   const mark = COMBINING[diacritic]
 
   const decomposed = text.normalize('NFD')
   // Retrocede sobre las marcas combinantes hasta dar con la letra base.
   let i = decomposed.length
   while (i > 0 && IS_COMBINING.test(decomposed[i - 1]!)) i--
-  if (i === 0) return text
 
   const head = decomposed.slice(0, i)
-  const marks = decomposed.slice(i)
+  let marks = decomposed.slice(i)
 
-  const next = marks.includes(mark)
-    ? marks.replace(mark, '') // ya estaba: se retira
-    : marks + mark
+  if (marks.includes(mark)) {
+    marks = marks.replace(mark, '') // ya estaba: se retira
+  } else {
+    // Un acento sustituye al acento anterior, no se acumula con él.
+    for (const grupo of EXCLUYENTES) {
+      if (!grupo.includes(diacritic)) continue
+      for (const otro of grupo) marks = marks.replace(COMBINING[otro], '')
+    }
+    marks = ordenarMarcas(marks + mark)
+  }
 
-  return (head + next).normalize('NFC')
+  return (head + marks).normalize('NFC')
 }
 
 /** Borra un carácter completo, marcas combinantes incluidas. */

@@ -113,3 +113,43 @@ test('el teclado en pantalla compone la forma acentuada y la da por buena', asyn
   await user.click(screen.getByRole('button', { name: 'Continuar' }))
   assert.equal(recibido, 3)
 })
+
+test('el acento pulsado antes de la vocal espera y cae donde debe', async () => {
+  const user = userEvent.setup()
+
+  const card = {
+    id: 'v:m01-s01-de:pro',
+    moduleId: 'module-01',
+    sectionId: 'm01-s01',
+    capsuleId: 'm01-s01-c01',
+    kind: 'vocab-producir' as const,
+    sourceId: 'm01-s01-de',
+  }
+  const settings: Settings = { ...DEFAULT_SETTINGS, showKeyboard: true }
+
+  render(
+    <TypeAnswer
+      item={{ card, progress: newProgress(card), mode: 'escribir', isNew: false }}
+      settings={settings}
+      onGraded={() => {}}
+    />,
+  )
+
+  const input = screen.getByLabelText('Tu respuesta en griego') as HTMLInputElement
+  const agudo = screen.getByRole('button', { name: 'Agudo' })
+
+  // La secuencia que antes producía δ́έ: el acento pulsado tras la delta.
+  await user.click(screen.getByRole('button', { name: 'δ' }))
+  await user.click(agudo)
+
+  // La delta no admite acento, así que la marca queda en espera.
+  assert.equal(input.value, 'δ')
+  assert.equal(agudo.getAttribute('aria-pressed'), 'true')
+
+  await user.click(screen.getByRole('button', { name: 'ε' }))
+  assert.equal(input.value, 'δέ')
+  assert.equal(agudo.getAttribute('aria-pressed'), 'false')
+
+  await user.click(screen.getByRole('button', { name: 'Comprobar' }))
+  await screen.findByText('Correcto')
+})
