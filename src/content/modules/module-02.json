@@ -1,0 +1,192 @@
+{
+  "id": "module-02",
+  "number": 2,
+  "title": "Primera declinación y presente",
+  "summary": "Sustantivos en -η, presente de indicativo activo y preguntas.",
+  "vocabulary": [
+    {
+      "id": "m02-boule",
+      "greek": "βουλή",
+      "info": "ἡ, -ῆς",
+      "es": ["consejo", "decisión", "plan"],
+      "pos": "sustantivo",
+      "tags": ["1ª declinación"]
+    },
+    {
+      "id": "m02-oikia",
+      "greek": "οἰκία",
+      "info": "ἡ, -ας",
+      "es": ["casa", "vivienda"],
+      "pos": "sustantivo",
+      "tags": ["1ª declinación"]
+    },
+    {
+      "id": "m02-thalatta",
+      "greek": "θάλαττα",
+      "info": "ἡ, -ης",
+      "es": ["mar"],
+      "pos": "sustantivo",
+      "notes": "Forma ática; en jonio θάλασσα.",
+      "tags": ["1ª declinación"]
+    },
+    {
+      "id": "m02-pauo",
+      "greek": "παύω",
+      "es": ["detener", "hacer cesar"],
+      "pos": "verbo",
+      "notes": "En voz media παύομαι: «cesar, dejar de»."
+    },
+    {
+      "id": "m02-lego",
+      "greek": "λέγω",
+      "es": ["decir", "hablar"],
+      "pos": "verbo"
+    },
+    {
+      "id": "m02-akouo",
+      "greek": "ἀκούω",
+      "info": "+ gen. de persona, + ac. de cosa",
+      "es": ["oír", "escuchar"],
+      "pos": "verbo"
+    },
+    {
+      "id": "m02-blepo",
+      "greek": "βλέπω",
+      "es": ["mirar", "ver"],
+      "pos": "verbo"
+    },
+    {
+      "id": "m02-nun",
+      "greek": "νῦν",
+      "es": ["ahora"],
+      "pos": "adverbio"
+    },
+    {
+      "id": "m02-ti",
+      "greek": "τί",
+      "es": ["qué", "por qué"],
+      "pos": "pronombre"
+    },
+    {
+      "id": "m02-tis",
+      "greek": "τίς",
+      "es": ["quién", "cuál"],
+      "pos": "pronombre"
+    },
+    {
+      "id": "m02-gar",
+      "greek": "γάρ",
+      "es": ["pues", "porque", "en efecto"],
+      "pos": "particula",
+      "notes": "Pospositiva."
+    },
+    {
+      "id": "m02-alla",
+      "greek": "ἀλλά",
+      "es": ["pero", "sino"],
+      "pos": "conjuncion"
+    }
+  ],
+  "paradigms": [
+    {
+      "id": "m02-boule-decl",
+      "title": "1ª declinación en -η",
+      "lemma": "βουλή, ἡ",
+      "gloss": "el consejo",
+      "axes": [
+        {
+          "id": "numero",
+          "label": "Número",
+          "values": [
+            { "id": "sg", "label": "Singular" },
+            { "id": "pl", "label": "Plural" }
+          ]
+        },
+        {
+          "id": "caso",
+          "label": "Caso",
+          "values": [
+            { "id": "nom", "label": "Nominativo" },
+            { "id": "ac", "label": "Acusativo" },
+            { "id": "gen", "label": "Genitivo" },
+            { "id": "dat", "label": "Dativo" }
+          ]
+        }
+      ],
+      "cells": {
+        "sg|nom": "βουλή",
+        "sg|ac": "βουλήν",
+        "sg|gen": "βουλῆς",
+        "sg|dat": "βουλῇ",
+        "pl|nom": "βουλαί",
+        "pl|ac": "βουλάς",
+        "pl|gen": "βουλῶν",
+        "pl|dat": "βουλαῖς"
+      },
+      "notes": "El genitivo plural de la 1ª declinación es siempre perispómeno: -ῶν."
+    },
+    {
+      "id": "m02-pauo-pres",
+      "title": "Presente de indicativo activo",
+      "lemma": "παύω",
+      "gloss": "detengo",
+      "axes": [
+        {
+          "id": "numero",
+          "label": "Número",
+          "values": [
+            { "id": "sg", "label": "Singular" },
+            { "id": "pl", "label": "Plural" }
+          ]
+        },
+        {
+          "id": "persona",
+          "label": "Persona",
+          "values": [
+            { "id": "1", "label": "1ª" },
+            { "id": "2", "label": "2ª" },
+            { "id": "3", "label": "3ª" }
+          ]
+        }
+      ],
+      "cells": {
+        "sg|1": "παύω",
+        "sg|2": "παύεις",
+        "sg|3": "παύει",
+        "pl|1": "παύομεν",
+        "pl|2": "παύετε",
+        "pl|3": ["παύουσι", "παύουσιν"]
+      },
+      "notes": "La ν efelcística de la 3ª del plural aparece ante vocal o pausa."
+    }
+  ],
+  "sentences": [
+    {
+      "id": "m02-s1",
+      "greek": "τί λέγεις; οὐ γὰρ ἀκούω.",
+      "es": ["¿Qué dices? Pues no oigo."]
+    },
+    {
+      "id": "m02-s2",
+      "greek": "νῦν τὴν θάλατταν βλέπομεν.",
+      "es": ["Ahora vemos el mar."]
+    },
+    {
+      "id": "m02-s3",
+      "greek": "οἱ ἄνθρωποι τὴν βουλὴν παύουσιν.",
+      "es": ["Los hombres detienen el consejo."]
+    }
+  ],
+  "grammar": [
+    {
+      "id": "m02-g1",
+      "title": "Alfa pura, alfa impura y eta",
+      "body": "Tras ε, ι o ρ el tema de 1ª declinación mantiene α larga en todo el singular (οἰκία, οἰκίας). Tras σ doble o consonante, la α del nominativo pasa a η en genitivo y dativo (θάλαττα, θαλάττης). Sin ninguno de esos contextos, el tema es en -η (βουλή, βουλῆς)."
+    },
+    {
+      "id": "m02-g2",
+      "title": "Signos de puntuación",
+      "body": "El punto alto (·) equivale a nuestros dos puntos o punto y coma. El punto y coma griego (;) es nuestro signo de interrogación de cierre."
+    }
+  ]
+}
