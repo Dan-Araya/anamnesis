@@ -1,6 +1,6 @@
 import { useStore } from '@/store'
-import { sectionLabel } from '@/content'
-import { currentSection } from '@/lib/session'
+import { capsuleLabel } from '@/content'
+import { currentCapsule } from '@/lib/session'
 
 /**
  * Tarjetas: el repaso de lo ya visto, mezclando todas las secciones. Aquí no
@@ -19,7 +19,7 @@ export default function CardsScreen({
   const due = statuses.reduce((sum, s) => (s.unlocked ? sum + s.due : sum), 0)
   const enCurso = statuses.reduce((sum, s) => sum + s.started, 0)
   const goalPct = Math.min(100, Math.round((today.reviews / settings.dailyGoal) * 100))
-  const actual = currentSection(statuses)
+  const actual = currentCapsule(statuses)
 
   /** Cuántas tarjetas vencen mañana, para saber si conviene volver. */
   const manana = (() => {
@@ -64,13 +64,13 @@ export default function CardsScreen({
             <strong>{enCurso === 0 ? 'Todavía no has practicado nada' : 'Todo al día'}</strong>
             <p className="muted small">
               {enCurso === 0
-                ? 'Las tarjetas aparecen aquí en cuanto empieces una sección del camino.'
+                ? 'Las tarjetas aparecen aquí en cuanto empieces una cápsula del camino.'
                 : manana > 0
                   ? `Mañana te tocan ${manana} tarjetas. Mientras tanto, puedes avanzar por el camino.`
                   : 'No hay repasos pendientes. Avanza por el camino para añadir material nuevo.'}
             </p>
             <button type="button" className="btn btn--wide" onClick={onGoToPath}>
-              {actual ? `Ir a ${sectionLabel(actual.section)}` : 'Ir al camino'}
+              {actual ? `Ir a ${capsuleLabel(actual.capsule)}` : 'Ir al camino'}
             </button>
           </div>
         )}

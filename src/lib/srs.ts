@@ -28,11 +28,15 @@ export const SRS = {
   matureInterval: 21,
 } as const
 
+/**
+ * Un acierto se considera «adelantado» —y no alarga el intervalo— si aún queda
+ * por transcurrir más de esta fracción del intervalo programado.
+ */
+const EARLY_THRESHOLD = 0.5
+
 export function newProgress(card: Card, now = Date.now()): CardProgress {
   return {
     cardId: card.id,
-    moduleId: card.moduleId,
-    sectionId: card.sectionId,
     kind: card.kind,
     state: 'nueva',
     due: now,
@@ -121,6 +125,14 @@ export function schedule(prev: CardProgress, grade: Grade, now = Date.now()): Ca
     next.ease = Math.max(SRS.minEase, prev.ease - 0.2)
     next.interval = clampInterval(prev.interval * SRS.lapseMultiplier)
     next.due = now + SRS.relearningSteps[0]! * MINUTE
+    return next
+  }
+
+  // Repaso adelantado: si la tarjeta se acierta mucho antes de que tocara, se
+  // da por refrescada pero no se alarga su intervalo. Es lo que permite
+  // mezclar material antiguo en cualquier sesión sin falsear la programación.
+  const remaining = prev.due - now
+  if (remaining > 0 && remaining > prev.interval * DAY * EARLY_THRESHOLD) {
     return next
   }
 

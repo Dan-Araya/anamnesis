@@ -5,38 +5,91 @@
     {
       "id": "m01-s01",
       "number": 1,
-      "vocabulary": [
+      "capsules": [
         {
-          "id": "m01-s01-de",
-          "greek": "δέ",
-          "es": ["y", "pero"],
-          "pos": "particula",
-          "notes": "Pospositiva: nunca abre la frase, va en segunda posición."
+          "id": "m01-s01-c01",
+          "number": 1,
+          "vocabulary": [
+            {
+              "id": "m01-s01-de",
+              "greek": "δέ",
+              "es": ["y", "pero"],
+              "pos": "particula",
+              "notes": "Pospositiva: nunca abre la frase, va en segunda posición."
+            },
+            {
+              "id": "m01-s01-epeita",
+              "greek": "ἔπειτα",
+              "es": ["luego", "después", "a continuación"],
+              "pos": "adverbio"
+            },
+            {
+              "id": "m01-s01-kai",
+              "greek": "καί",
+              "es": ["y", "también"],
+              "pos": "conjuncion"
+            },
+            {
+              "id": "m01-s01-te-kai",
+              "greek": "τε … καί",
+              "es": ["tanto A como B", "tanto… como…"],
+              "pos": "expresion",
+              "cards": ["reconocer"],
+              "notes": "τε es enclítica y pospositiva: se coloca detrás del primer elemento."
+            }
+          ],
+          "paradigms": [],
+          "sentences": [],
+          "grammar": []
         },
         {
-          "id": "m01-s01-epeita",
-          "greek": "ἔπειτα",
-          "es": ["luego", "después", "a continuación"],
-          "pos": "adverbio"
-        },
-        {
-          "id": "m01-s01-kai",
-          "greek": "καί",
-          "es": ["y", "también"],
-          "pos": "conjuncion"
-        },
-        {
-          "id": "m01-s01-te-kai",
-          "greek": "τε … καί",
-          "es": ["tanto A como B", "tanto… como…"],
-          "pos": "expresion",
-          "cards": ["reconocer"],
-          "notes": "τε es enclítica y pospositiva: se coloca detrás del primer elemento."
+          "id": "m01-s01-c02",
+          "number": 2,
+          "vocabulary": [
+            {
+              "id": "m01-s01-ara",
+              "greek": "ἆρα",
+              "es": ["¿acaso?", "¿...?"],
+              "pos": "particula",
+              "notes": "Partícula interrogativa: marca la frase como pregunta. A menudo no se traduce con una palabra, solo con la entonación."
+            },
+            {
+              "id": "m01-s01-tis",
+              "greek": "τίς",
+              "es": ["¿quién?"],
+              "pos": "pronombre"
+            },
+            {
+              "id": "m01-s01-o",
+              "greek": "ὦ",
+              "es": ["oh"],
+              "pos": "interjeccion",
+              "notes": "Acompaña al vocativo. En español suele omitirse: ὦ Σώκρατες = «Sócrates»."
+            },
+            {
+              "id": "m01-s01-deuro",
+              "greek": "δεῦρο",
+              "es": ["ven aquí", "hacia aquí"],
+              "pos": "adverbio"
+            },
+            {
+              "id": "m01-s01-su",
+              "greek": "σύ",
+              "es": ["tú"],
+              "pos": "pronombre"
+            },
+            {
+              "id": "m01-s01-ego",
+              "greek": "ἐγώ",
+              "es": ["yo"],
+              "pos": "pronombre"
+            }
+          ],
+          "paradigms": [],
+          "sentences": [],
+          "grammar": []
         }
-      ],
-      "paradigms": [],
-      "sentences": [],
-      "grammar": []
+      ]
     }
   ]
 }

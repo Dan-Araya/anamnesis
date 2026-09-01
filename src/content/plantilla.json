@@ -3,6 +3,7 @@
     "Plantilla de módulo. Está fuera de modules/ a propósito: el cargador solo",
     "recoge los .json de esa carpeta, así que esta copia no aparece en el camino.",
     "Para crear un módulo nuevo, cópiala a modules/module-0N.json y rellénala.",
+    "Jerarquía: módulo > secciones > cápsulas. La cápsula es el nodo del camino.",
     "El formato completo está documentado en el README."
   ],
   "id": "module-0N",
@@ -12,61 +13,68 @@
     {
       "id": "m0N-s01",
       "number": 1,
-      "title": "Opcional, igual que el del módulo",
-      "vocabulary": [
+      "title": "Opcional",
+      "capsules": [
         {
-          "id": "m0N-s01-ejemplo",
-          "greek": "λόγος",
-          "info": "ὁ, -ου",
-          "es": ["palabra", "razón"],
-          "pos": "sustantivo",
-          "notes": "Opcional.",
-          "tags": ["opcional"],
-          "cards": ["reconocer", "producir"]
-        }
-      ],
-      "paradigms": [
-        {
-          "id": "m0N-s01-paradigma",
-          "title": "Nombre de la tabla",
-          "lemma": "λόγος, ὁ",
-          "gloss": "la palabra",
-          "axes": [
+          "id": "m0N-s01-c01",
+          "number": 1,
+          "title": "Opcional",
+          "vocabulary": [
             {
-              "id": "numero",
-              "label": "Número",
-              "values": [
-                { "id": "sg", "label": "Singular" },
-                { "id": "pl", "label": "Plural" }
-              ]
-            },
-            {
-              "id": "caso",
-              "label": "Caso",
-              "values": [
-                { "id": "nom", "label": "Nominativo" },
-                { "id": "ac", "label": "Acusativo" }
-              ]
+              "id": "m0N-s01-ejemplo",
+              "greek": "λόγος",
+              "info": "ὁ, -ου",
+              "es": ["palabra", "razón"],
+              "pos": "sustantivo",
+              "notes": "Opcional.",
+              "tags": ["opcional"],
+              "cards": ["reconocer", "producir"]
             }
           ],
-          "cells": {
-            "sg|nom": "λόγος",
-            "sg|ac": "λόγον",
-            "pl|nom": "λόγοι",
-            "pl|ac": ["λόγους", "forma alternativa aceptada"]
-          },
-          "notes": "Opcional."
+          "paradigms": [
+            {
+              "id": "m0N-s01-paradigma",
+              "title": "Nombre de la tabla",
+              "lemma": "λόγος, ὁ",
+              "gloss": "la palabra",
+              "axes": [
+                {
+                  "id": "numero",
+                  "label": "Número",
+                  "values": [
+                    { "id": "sg", "label": "Singular" },
+                    { "id": "pl", "label": "Plural" }
+                  ]
+                },
+                {
+                  "id": "caso",
+                  "label": "Caso",
+                  "values": [
+                    { "id": "nom", "label": "Nominativo" },
+                    { "id": "ac", "label": "Acusativo" }
+                  ]
+                }
+              ],
+              "cells": {
+                "sg|nom": "λόγος",
+                "sg|ac": "λόγον",
+                "pl|nom": "λόγοι",
+                "pl|ac": ["λόγους", "forma alternativa aceptada"]
+              },
+              "notes": "Opcional."
+            }
+          ],
+          "sentences": [
+            {
+              "id": "m0N-s01-frase",
+              "greek": "ὁ λόγος καλός.",
+              "es": ["La palabra es hermosa."],
+              "hint": "Opcional."
+            }
+          ],
+          "grammar": [{ "id": "m0N-s01-nota", "title": "Título", "body": "Explicación." }]
         }
-      ],
-      "sentences": [
-        {
-          "id": "m0N-s01-frase",
-          "greek": "ὁ λόγος καλός.",
-          "es": ["La palabra es hermosa."],
-          "hint": "Opcional."
-        }
-      ],
-      "grammar": [{ "id": "m0N-s01-nota", "title": "Título", "body": "Explicación." }]
+      ]
     }
   ]
 }

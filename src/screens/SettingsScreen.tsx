@@ -74,6 +74,24 @@ export default function SettingsScreen() {
 
         <div className="campo">
           <div>
+            <div className="campo__label">Repaso mezclado</div>
+            <div className="muted small">
+              Qué parte de una cápsula nueva se dedica a repasar lo anterior. Con 0 cada
+              cápsula sería estanca.
+            </div>
+          </div>
+          <input
+            type="number"
+            min={0}
+            max={80}
+            step={10}
+            value={Math.round(settings.mixRatio * 100)}
+            onChange={(e) => void updateSettings({ mixRatio: clamp(e.target.value, 0, 80) / 100 })}
+          />
+        </div>
+
+        <div className="campo">
+          <div>
             <div className="campo__label">Dominio para desbloquear</div>
             <div className="muted small">
               Porcentaje del módulo necesario para abrir el siguiente.

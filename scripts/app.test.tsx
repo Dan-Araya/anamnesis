@@ -10,19 +10,19 @@ import { DEFAULT_SETTINGS, loadProgress } from '../src/lib/db'
 import { newProgress } from '../src/lib/srs'
 import TypeAnswer from '../src/components/exercises/TypeAnswer'
 
-test('el camino arranca con la primera sección abierta y las demás bloqueadas', async () => {
+test('el camino arranca con la primera cápsula abierta y las demás bloqueadas', async () => {
   render(
     <StoreProvider>
       <App />
     </StoreProvider>,
   )
 
-  const primera = await screen.findByRole('button', { name: 'Sección 1' })
+  const primera = await screen.findByRole('button', { name: 'Cápsula 1' })
   assert.equal(primera.hasAttribute('disabled'), false)
 
   // Cualquier nodo posterior nace bloqueado.
-  for (const { section } of path.slice(1)) {
-    const nodo = screen.getByRole('button', { name: `Sección ${section.number} (bloqueada)` })
+  for (const { capsule } of path.slice(1)) {
+    const nodo = screen.getByRole('button', { name: `Cápsula ${capsule.number} (bloqueada)` })
     assert.ok(nodo.hasAttribute('disabled'))
   }
 })
@@ -36,7 +36,7 @@ test('pulsar el nodo entra directo a practicar y guarda el progreso', async () =
   )
 
   // Sin pantalla intermedia: del camino a la primera pregunta.
-  await user.click(await screen.findByRole('button', { name: 'Sección 1' }))
+  await user.click(await screen.findByRole('button', { name: 'Cápsula 1' }))
 
   await screen.findByText('¿Qué significa?')
   const griego = document.querySelector('.prompt__greek')?.textContent ?? ''
@@ -51,7 +51,7 @@ test('pulsar el nodo entra directo a practicar y guarda el progreso', async () =
     assert.equal(progress.size, 1)
     const [saved] = [...progress.values()]
     assert.equal(saved!.state, 'aprendiendo')
-    assert.equal(saved!.sectionId, 'm01-s01')
+    assert.equal(saved!.cardId.startsWith('v:m01-s01-'), true)
   })
 })
 
@@ -79,6 +79,7 @@ test('el teclado en pantalla compone la forma acentuada y la da por buena', asyn
     id: 'v:m01-s01-epeita:pro',
     moduleId: 'module-01',
     sectionId: 'm01-s01',
+    capsuleId: 'm01-s01-c01',
     kind: 'vocab-producir' as const,
     sourceId: 'm01-s01-epeita',
   }

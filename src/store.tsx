@@ -28,7 +28,7 @@ import {
   saveSettings,
 } from '@/lib/db'
 import { newProgress, schedule } from '@/lib/srs'
-import { sectionStatuses, type SectionStatus } from '@/lib/session'
+import { capsuleStatuses, type CapsuleStatus } from '@/lib/session'
 
 interface Store {
   ready: boolean
@@ -37,8 +37,8 @@ interface Store {
   daily: DailyStat[]
   today: DailyStat
   streak: number
-  /** Estado de cada sección del camino, en orden. */
-  statuses: SectionStatus[]
+  /** Estado de cada cápsula del camino, en orden. */
+  statuses: CapsuleStatus[]
   /** Registra una respuesta y devuelve el estado resultante de la tarjeta. */
   review(input: {
     card: Card
@@ -94,6 +94,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         cardId: card.id,
         moduleId: card.moduleId,
         sectionId: card.sectionId,
+        capsuleId: card.capsuleId,
         kind: card.kind,
         mode,
         grade,
@@ -131,7 +132,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const streak = useMemo(() => computeStreak(daily), [daily])
 
   const statuses = useMemo(
-    () => sectionStatuses(progress, settings),
+    () => capsuleStatuses(progress, settings),
     [progress, settings],
   )
 

@@ -1,4 +1,5 @@
 import type {
+  Capsule,
   Card,
   ModuleContent,
   Paradigm,
@@ -16,47 +17,57 @@ const files = import.meta.glob<{ default: ModuleContent }>('./modules/*.json', {
   eager: true,
 })
 
-export const modules: ModuleContent[] = Object.values(files)
-  .map((m) => m.default)
-  .sort((a, b) => a.number - b.number)
-  .map((m) => ({ ...m, sections: [...m.sections].sort((a, b) => a.number - b.number) }))
+const byNumber = <T extends { number: number }>(items: T[]): T[] =>
+  [...items].sort((a, b) => a.number - b.number)
 
-/** Una sección junto al módulo al que pertenece. */
+export const modules: ModuleContent[] = byNumber(
+  Object.values(files).map((m) => m.default),
+).map((m) => ({
+  ...m,
+  sections: byNumber(m.sections).map((s) => ({ ...s, capsules: byNumber(s.capsules) })),
+}))
+
+/** Una cápsula junto al lugar que ocupa en la jerarquía. */
 export interface PathNode {
+  capsule: Capsule
   section: Section
   module: ModuleContent
 }
 
 /**
- * Las secciones de todos los módulos, en el orden en que se recorren.
+ * Las cápsulas de todo el contenido, en el orden en que se recorren.
  * Es la espina dorsal del camino: el desbloqueo avanza por esta lista.
  */
 export const path: PathNode[] = modules.flatMap((module) =>
-  module.sections.map((section) => ({ section, module })),
+  module.sections.flatMap((section) =>
+    section.capsules.map((capsule) => ({ capsule, section, module })),
+  ),
 )
 
 const moduleById = new Map(modules.map((m) => [m.id, m]))
-const nodeBySectionId = new Map(path.map((node) => [node.section.id, node]))
+const nodeByCapsuleId = new Map(path.map((node) => [node.capsule.id, node]))
 
 export function getModule(id: string): ModuleContent | undefined {
   return moduleById.get(id)
 }
 
-export function getNode(sectionId: string): PathNode | undefined {
-  return nodeBySectionId.get(sectionId)
+export function getNode(capsuleId: string): PathNode | undefined {
+  return nodeByCapsuleId.get(capsuleId)
 }
 
-/** ¿Tiene la sección algo que practicar? */
-export function isEmpty(s: Section): boolean {
-  return s.vocabulary.length === 0 && s.paradigms.length === 0 && s.sentences.length === 0
+/** ¿Tiene la cápsula algo que practicar? */
+export function isEmpty(c: Capsule): boolean {
+  return c.vocabulary.length === 0 && c.paradigms.length === 0 && c.sentences.length === 0
 }
 
-/** Nombre visible de una sección: su título si lo tiene, si no su número. */
+export function capsuleLabel(c: Capsule): string {
+  return c.title ?? `Cápsula ${c.number}`
+}
+
 export function sectionLabel(s: Section): string {
   return s.title ?? `Sección ${s.number}`
 }
 
-/** Nombre visible de un módulo. */
 export function moduleLabel(m: ModuleContent): string {
   return m.title ?? `Módulo ${m.number}`
 }
@@ -93,11 +104,15 @@ export function cellLabel(p: Paradigm, key: string): string {
     .join(' · ')
 }
 
-function cardsForSection(section: Section, moduleId: string): Card[] {
+function cardsForCapsule(node: PathNode): Card[] {
   const cards: Card[] = []
-  const base = { moduleId, sectionId: section.id }
+  const base = {
+    moduleId: node.module.id,
+    sectionId: node.section.id,
+    capsuleId: node.capsule.id,
+  }
 
-  for (const v of section.vocabulary) {
+  for (const v of node.capsule.vocabulary) {
     // Por defecto una palabra se practica en las dos direcciones; las
     // expresiones suelen declarar solo "reconocer".
     const directions = v.cards ?? ['reconocer', 'producir']
@@ -109,7 +124,7 @@ function cardsForSection(section: Section, moduleId: string): Card[] {
     }
   }
 
-  for (const p of section.paradigms) {
+  for (const p of node.capsule.paradigms) {
     for (const key of cellKeys(p)) {
       cards.push({
         ...base,
@@ -121,20 +136,20 @@ function cardsForSection(section: Section, moduleId: string): Card[] {
     }
   }
 
-  for (const s of section.sentences) {
+  for (const s of node.capsule.sentences) {
     cards.push({ ...base, id: `s:${s.id}`, kind: 'traduccion', sourceId: s.id })
   }
 
   return cards
 }
 
-export const cardsBySection = new Map<string, Card[]>(
-  path.map(({ section, module }) => [section.id, cardsForSection(section, module.id)]),
+export const cardsByCapsule = new Map<string, Card[]>(
+  path.map((node) => [node.capsule.id, cardsForCapsule(node)]),
 )
 
 /** Todas las tarjetas del contenido, en orden del camino. */
 export const allCards: Card[] = path.flatMap(
-  ({ section }) => cardsBySection.get(section.id) ?? [],
+  ({ capsule }) => cardsByCapsule.get(capsule.id) ?? [],
 )
 
 // ---------------------------------------------------------------------------
@@ -145,10 +160,10 @@ const vocabById = new Map<string, VocabEntry>()
 const paradigmById = new Map<string, Paradigm>()
 const sentenceById = new Map<string, Sentence>()
 
-for (const { section } of path) {
-  for (const v of section.vocabulary) vocabById.set(v.id, v)
-  for (const p of section.paradigms) paradigmById.set(p.id, p)
-  for (const s of section.sentences) sentenceById.set(s.id, s)
+for (const { capsule } of path) {
+  for (const v of capsule.vocabulary) vocabById.set(v.id, v)
+  for (const p of capsule.paradigms) paradigmById.set(p.id, p)
+  for (const s of capsule.sentences) sentenceById.set(s.id, s)
 }
 
 export function getVocab(id: string): VocabEntry | undefined {
@@ -164,4 +179,4 @@ export function getSentence(id: string): Sentence | undefined {
 }
 
 /** Vocabulario de todo el contenido, para generar distractores. */
-export const allVocab: VocabEntry[] = path.flatMap(({ section }) => section.vocabulary)
+export const allVocab: VocabEntry[] = path.flatMap(({ capsule }) => capsule.vocabulary)

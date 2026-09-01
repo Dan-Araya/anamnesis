@@ -531,6 +531,15 @@ textarea {
   color: var(--muted);
 }
 
+.camino__subrotulo {
+  text-align: center;
+  margin: 4px 0 20px;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 /* Cada parada se desplaza a un lado para dibujar el zigzag del camino. */
 .camino__parada {
   display: flex;

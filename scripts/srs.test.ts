@@ -7,6 +7,7 @@ const card: Card = {
   id: 'v:test:rec',
   moduleId: 'module-01',
   sectionId: 'm01-s01',
+  capsuleId: 'm01-s01-c01',
   kind: 'vocab-reconocer',
   sourceId: 'test',
 }
@@ -52,7 +53,8 @@ test('«otra vez» devuelve al primer paso', () => {
 test('el intervalo crece según el factor de facilidad', () => {
   let p = schedule(newProgress(card, NOW), 4, NOW) // 4 días
   const antes = p.interval
-  p = schedule(p, 3, NOW)
+  // Se repasa el día que tocaba: adelantarlo mucho no alargaría el intervalo.
+  p = schedule(p, 3, p.due)
   // Con fuzz de ±5 %, el intervalo ronda antes * ease.
   const esperado = antes * SRS.startingEase
   assert.ok(p.interval > esperado * 0.9 && p.interval < esperado * 1.1, `fue ${p.interval}`)
@@ -101,4 +103,37 @@ test('isDue solo marca lo que ya venció', () => {
   const p = schedule(newProgress(card, NOW), 4, NOW)
   assert.equal(isDue(p, NOW), false)
   assert.equal(isDue(p, NOW + 5 * DAY), true)
+})
+
+test('un acierto muy adelantado refresca pero no alarga el intervalo', () => {
+  // Tarjeta con 10 días de intervalo, repasada al día siguiente de programarla.
+  let p = schedule(newProgress(card, NOW), 4, NOW)
+  p = schedule(p, 3, p.due)
+  const intervalo = p.interval
+  const vencimiento = p.due
+
+  const adelantado = schedule(p, 3, p.due - intervalo * DAY * 0.9)
+  assert.equal(adelantado.interval, intervalo)
+  assert.equal(adelantado.due, vencimiento)
+  // Aun así cuenta como repetición: la tarjeta se ha vuelto a ver.
+  assert.equal(adelantado.reps, p.reps + 1)
+})
+
+test('un acierto cerca del vencimiento sí reprograma', () => {
+  let p = schedule(newProgress(card, NOW), 4, NOW)
+  p = schedule(p, 3, p.due)
+
+  // A falta de un 10 % del intervalo ya se considera un repaso normal.
+  const aTiempo = schedule(p, 3, p.due - p.interval * DAY * 0.1)
+  assert.ok(aTiempo.interval > p.interval)
+})
+
+test('fallar una tarjeta adelantada sí la penaliza', () => {
+  let p = schedule(newProgress(card, NOW), 4, NOW)
+  p = schedule(p, 3, p.due)
+
+  const fallada = schedule(p, 1, p.due - p.interval * DAY * 0.9)
+  assert.equal(fallada.state, 'reaprendiendo')
+  assert.equal(fallada.lapses, 1)
+  assert.ok(fallada.interval < p.interval)
 })

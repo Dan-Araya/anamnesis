@@ -1,21 +1,22 @@
 import { useEffect, useMemo, useRef } from 'react'
-import type { SectionStatus } from '@/lib/session'
+import type { ModuleContent, Section } from '@/types'
+import type { CapsuleStatus } from '@/lib/session'
 import { useStore } from '@/store'
-import { currentSection } from '@/lib/session'
-import { moduleLabel, sectionLabel } from '@/content'
+import { currentCapsule } from '@/lib/session'
+import { capsuleLabel, moduleLabel, sectionLabel } from '@/content'
 
 /**
- * El camino: un scroll continuo de nodos. Cada nodo es una sección y al
- * pulsarlo se practica; los módulos solo aparecen como rótulos que separan
- * tramos. No se entra en un módulo, se atraviesa.
+ * El camino: un scroll continuo de nodos. Cada nodo es una cápsula y al
+ * pulsarlo se practica; módulos y secciones solo aparecen como rótulos que
+ * separan tramos. No se entra en ellos, se atraviesan.
  */
 export default function PathScreen({
   onPractice,
 }: {
-  onPractice: (sectionId: string) => void
+  onPractice: (capsuleId: string) => void
 }) {
   const { statuses } = useStore()
-  const actual = currentSection(statuses)
+  const actual = currentCapsule(statuses)
   const actualRef = useRef<HTMLDivElement>(null)
 
   // Al abrir la app, deja a la vista el nodo en el que se quedó.
@@ -23,25 +24,7 @@ export default function PathScreen({
     actualRef.current?.scrollIntoView({ block: 'center' })
   }, [])
 
-  /** Los nodos van agrupados bajo el rótulo de su módulo. */
-  const grupos = useMemo(() => {
-    const out: { moduleId: string; label: string; summary?: string; items: SectionStatus[] }[] =
-      []
-    for (const status of statuses) {
-      const last = out.at(-1)
-      if (last?.moduleId === status.module.id) {
-        last.items.push(status)
-      } else {
-        out.push({
-          moduleId: status.module.id,
-          label: moduleLabel(status.module),
-          summary: status.module.summary,
-          items: [status],
-        })
-      }
-    }
-    return out
-  }, [statuses])
+  const grupos = useMemo(() => agrupar(statuses), [statuses])
 
   if (statuses.length === 0) {
     return (
@@ -56,24 +39,37 @@ export default function PathScreen({
     )
   }
 
+  let posicion = 0
+
   return (
     <div className="screen camino">
       {grupos.map((grupo) => (
-        <section key={grupo.moduleId}>
+        <section key={grupo.module.id}>
           <header className="camino__rotulo">
-            <span className="camino__rotulo-texto">{grupo.label}</span>
-            {grupo.summary && <p className="camino__rotulo-sub">{grupo.summary}</p>}
+            <span className="camino__rotulo-texto">{moduleLabel(grupo.module)}</span>
+            {grupo.module.summary && (
+              <p className="camino__rotulo-sub">{grupo.module.summary}</p>
+            )}
           </header>
 
-          {grupo.items.map((status, i) => (
-            <Nodo
-              key={status.section.id}
-              status={status}
-              posicion={i}
-              esActual={status.section.id === actual?.section.id}
-              ref={status.section.id === actual?.section.id ? actualRef : undefined}
-              onPractice={onPractice}
-            />
+          {grupo.secciones.map((bloque) => (
+            <div key={bloque.section.id}>
+              {/* La sección solo se rotula si el módulo tiene más de una. */}
+              {grupo.secciones.length > 1 && (
+                <div className="camino__subrotulo">{sectionLabel(bloque.section)}</div>
+              )}
+
+              {bloque.items.map((status) => (
+                <Nodo
+                  key={status.capsule.id}
+                  status={status}
+                  posicion={posicion++}
+                  esActual={status.capsule.id === actual?.capsule.id}
+                  ref={status.capsule.id === actual?.capsule.id ? actualRef : undefined}
+                  onPractice={onPractice}
+                />
+              ))}
+            </div>
           ))}
         </section>
       ))}
@@ -83,6 +79,33 @@ export default function PathScreen({
       </div>
     </div>
   )
+}
+
+interface Grupo {
+  module: ModuleContent
+  secciones: { section: Section; items: CapsuleStatus[] }[]
+}
+
+/** Reagrupa la lista plana de cápsulas por módulo y sección. */
+function agrupar(statuses: CapsuleStatus[]): Grupo[] {
+  const grupos: Grupo[] = []
+
+  for (const status of statuses) {
+    let grupo = grupos.at(-1)
+    if (grupo?.module.id !== status.module.id) {
+      grupo = { module: status.module, secciones: [] }
+      grupos.push(grupo)
+    }
+
+    const bloque = grupo.secciones.at(-1)
+    if (bloque?.section.id === status.section.id) {
+      bloque.items.push(status)
+    } else {
+      grupo.secciones.push({ section: status.section, items: [status] })
+    }
+  }
+
+  return grupos
 }
 
 /** Zigzag: centro, derecha, centro, izquierda. */
@@ -95,10 +118,10 @@ function Nodo({
   onPractice,
   ref,
 }: {
-  status: SectionStatus
+  status: CapsuleStatus
   posicion: number
   esActual: boolean
-  onPractice: (sectionId: string) => void
+  onPractice: (capsuleId: string) => void
   ref?: React.Ref<HTMLDivElement>
 }) {
   const vacia = status.total === 0
@@ -125,19 +148,19 @@ function Nodo({
         type="button"
         className={clases.join(' ')}
         disabled={!disponible}
-        // El anillo exterior muestra lo dominado de la sección.
+        // El anillo exterior muestra lo dominado de la cápsula.
         style={{ ['--pct' as string]: pct }}
-        aria-label={`${sectionLabel(status.section)}${
+        aria-label={`${capsuleLabel(status.capsule)}${
           status.unlocked ? '' : ' (bloqueada)'
         }`}
-        onClick={() => onPractice(status.section.id)}
+        onClick={() => onPractice(status.capsule.id)}
       >
         <span className="nodo__cara">
-          {!status.unlocked ? '🔒' : status.completed ? '✓' : vacia ? '·' : status.section.number}
+          {!status.unlocked ? '🔒' : status.completed ? '✓' : vacia ? '·' : status.capsule.number}
         </span>
       </button>
 
-      <span className="nodo__etiqueta">{sectionLabel(status.section)}</span>
+      <span className="nodo__etiqueta">{capsuleLabel(status.capsule)}</span>
       {disponible && status.due > 0 && (
         <span className="nodo__aviso">{status.due} por repasar</span>
       )}

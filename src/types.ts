@@ -1,13 +1,13 @@
 /**
  * Modelo de contenido y de progreso.
  *
- * El contenido vive en `src/content/modules/*.json` y se edita a mano. Cada
- * módulo se divide en secciones, y cada sección es un nodo del camino: lo que
- * se practica de una sentada.
+ * El contenido se organiza en tres niveles: un módulo agrupa secciones, y una
+ * sección agrupa cápsulas. La cápsula es lo que se practica de una sentada y
+ * lo que aparece como nodo en el camino.
  *
- * El progreso vive en IndexedDB y nunca se mezcla con el contenido: si
- * reescribes una sección, las tarjetas conservan su historial mientras el `id`
- * del ítem no cambie.
+ * El progreso vive en IndexedDB y guarda lo mínimo —el identificador de la
+ * tarjeta y su estado—, así que reorganizar el contenido no lo invalida
+ * mientras los `id` de los ítems no cambien.
  */
 
 // ---------------------------------------------------------------------------
@@ -25,6 +25,7 @@ export type PartOfSpeech =
   | 'pronombre'
   | 'articulo'
   | 'numeral'
+  | 'interjeccion'
   | 'expresion'
 
 /** Qué tarjetas genera una entrada de vocabulario. */
@@ -81,7 +82,7 @@ export interface Sentence {
   notes?: string
 }
 
-/** Nota de gramática que se puede consultar desde la sección. */
+/** Nota de gramática que se puede consultar desde la cápsula. */
 export interface GrammarNote {
   id: string
   title: string
@@ -89,14 +90,15 @@ export interface GrammarNote {
 }
 
 /**
- * Un nodo del camino. Se practica entera de una vez y, al dominarla, abre la
- * siguiente.
+ * Un nodo del camino: el material que se practica de una vez. Al dominarla
+ * abre la siguiente, pero su vocabulario sigue apareciendo mezclado en las
+ * cápsulas posteriores mientras el algoritmo lo pida.
  */
-export interface Section {
+export interface Capsule {
   id: string
-  /** Posición dentro del módulo. El nodo lo muestra mientras no haya título. */
+  /** Posición dentro de la sección. El nodo lo muestra mientras no haya título. */
   number: number
-  /** Opcional: se le pone nombre cuando la sección está terminada. */
+  /** Opcional: se le pone nombre cuando la cápsula está terminada. */
   title?: string
   vocabulary: VocabEntry[]
   paradigms: Paradigm[]
@@ -104,7 +106,15 @@ export interface Section {
   grammar: GrammarNote[]
 }
 
-/** Un tramo del camino. Solo agrupa secciones: no se entra en él. */
+/** Un grupo de cápsulas dentro de un módulo. */
+export interface Section {
+  id: string
+  number: number
+  title?: string
+  capsules: Capsule[]
+}
+
+/** Un tramo del camino. Solo agrupa: no se entra en él. */
 export interface ModuleContent {
   id: string
   number: number
@@ -135,6 +145,7 @@ export interface Card {
   id: string
   moduleId: string
   sectionId: string
+  capsuleId: string
   kind: CardKind
   /** id del ítem de contenido del que procede (vocab, paradigma, frase). */
   sourceId: string
@@ -151,10 +162,12 @@ export type CardState = 'nueva' | 'aprendiendo' | 'repaso' | 'reaprendiendo'
 /** 1 = otra vez, 2 = difícil, 3 = bien, 4 = fácil. */
 export type Grade = 1 | 2 | 3 | 4
 
+/**
+ * Estado de una tarjeta. A propósito no guarda a qué cápsula pertenece: eso lo
+ * sabe el contenido, y así mover material de sitio no rompe el historial.
+ */
 export interface CardProgress {
   cardId: string
-  moduleId: string
-  sectionId: string
   kind: CardKind
   state: CardState
   /** Timestamp (ms) del próximo repaso. */
@@ -177,6 +190,7 @@ export interface ReviewLog {
   cardId: string
   moduleId: string
   sectionId: string
+  capsuleId: string
   kind: CardKind
   mode: ExerciseMode
   grade: Grade
@@ -193,9 +207,15 @@ export interface Settings {
   newPerDay: number
   /** Objetivo diario de tarjetas (nuevas + repasos). */
   dailyGoal: number
+  /**
+   * Proporción de la sesión reservada a repasar material antiguo, de 0 a 1.
+   * Con 0 cada cápsula sería estanca; con 0,4 casi la mitad de lo que ves al
+   * practicar una cápsula nueva son palabras de las anteriores.
+   */
+  mixRatio: number
   /** Exigir acentos y espíritus en las respuestas escritas. */
   strictDiacritics: boolean
-  /** % de dominio de una sección necesario para abrir la siguiente. */
+  /** % de dominio de una cápsula necesario para abrir la siguiente. */
   unlockThreshold: number
   /** Mostrar el teclado griego en pantalla. */
   showKeyboard: boolean

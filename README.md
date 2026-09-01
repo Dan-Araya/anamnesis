@@ -8,23 +8,44 @@ progreso vive en el IndexedDB del dispositivo.
 
 ## Cómo está organizada
 
-La pantalla principal es **el camino**: un scroll continuo de nodos. Cada nodo
-es una **sección** y al pulsarlo se practica directamente, sin pantallas
-intermedias. Los **módulos** no se visitan: son los rótulos que separan tramos
-del camino.
+El contenido tiene tres niveles: un **módulo** agrupa **secciones**, y una
+sección agrupa **cápsulas**. La cápsula es la unidad que se practica.
 
-El avance es lineal. Una sección se abre cuando la anterior alcanza el umbral
-de dominio (60 % por defecto), y el camino sigue de un módulo al siguiente sin
-cambiar de pantalla.
+La pantalla principal es **el camino**: un scroll continuo de nodos, uno por
+cápsula. Al pulsar un nodo se practica directamente, sin pantallas intermedias.
+Módulos y secciones no se visitan: son los rótulos que separan tramos.
+
+El avance es lineal. Una cápsula se abre cuando la anterior alcanza el umbral
+de dominio, y el camino sigue de una sección a la siguiente y de un módulo al
+siguiente sin cambiar de pantalla.
 
 Las cuatro pestañas:
 
-| Pestaña      | Para qué                                                          |
-| ------------ | ----------------------------------------------------------------- |
-| **Camino**   | Avanzar. Es donde entra el material nuevo                          |
-| **Tarjetas** | Repasar lo ya visto de todas las secciones, con la racha del día   |
-| **Progreso** | Historial, precisión y previsión de repasos                        |
-| **Ajustes**  | Ritmo diario, exigencia con los diacríticos, copias de seguridad   |
+| Pestaña      | Para qué                                                        |
+| ------------ | --------------------------------------------------------------- |
+| **Camino**   | Avanzar. Es donde entra el material nuevo                        |
+| **Tarjetas** | Repasar lo ya visto de todas las cápsulas, con la racha del día  |
+| **Progreso** | Historial, precisión y previsión de repasos                      |
+| **Ajustes**  | Ritmo diario, mezcla, diacríticos, copias de seguridad           |
+
+## Nada se da por sabido
+
+Terminar una cápsula no la archiva. Al practicar una cápsula nueva, parte de la
+sesión se dedica a material de las anteriores, para que lo aprendido siga
+volviendo:
+
+1. Entran **todas las tarjetas vencidas**, las más atrasadas primero.
+2. Si no bastan para llenar la proporción de repaso (**40 % por defecto**,
+   ajustable de 0 a 80 %), se **adelantan repasos** que aún no tocaban,
+   empezando por los de la misma sección y los más próximos a vencer.
+
+Adelantar un repaso no falsea la programación: acertar una tarjeta mucho antes
+de tiempo la refresca pero **no alarga su intervalo** (`EARLY_THRESHOLD` en
+`src/lib/srs.ts`). Fallarla, en cambio, sí la penaliza siempre.
+
+Dentro de una misma sesión, una tarjeta vuelve a aparecer mientras siga en
+aprendizaje —no solo cuando se falla—, hasta un máximo de cuatro veces. Así el
+vocabulario nuevo se ve un par de veces antes de terminar y llega a graduarse.
 
 ## Comandos
 
@@ -38,86 +59,97 @@ Las cuatro pestañas:
 
 ## Añadir contenido
 
-Cada módulo es un archivo en `src/content/modules/`, y contiene secciones. El
-cargador recoge automáticamente cualquier `.json` de esa carpeta y ordena por
-`number`, así que no hay que registrar nada. Tienes una plantilla lista para
-copiar en `src/content/plantilla.json` (está fuera de `modules/` justamente
-para que no aparezca como un módulo más).
+Cada módulo es un archivo en `src/content/modules/`. El cargador recoge
+automáticamente cualquier `.json` de esa carpeta y ordena módulos, secciones y
+cápsulas por su `number`, así que no hay que registrar nada. Tienes una
+plantilla lista para copiar en `src/content/plantilla.json` (está fuera de
+`modules/` justamente para que no aparezca como un módulo más).
+
+Los títulos son opcionales en los tres niveles: mientras no los pongas se
+muestra «Módulo 1», «Sección 2», «Cápsula 3».
 
 ```jsonc
 {
-  "id": "module-01",          // único; no lo cambies después
+  "id": "module-01",              // único; no lo cambies después
   "number": 1,
-  "title": "Opcional",        // sin título se muestra «Módulo 1»
+  "title": "Opcional",
   "sections": [
     {
-      "id": "m01-s02",
-      "number": 2,
-      "title": "Opcional",    // sin título se muestra «Sección 2»
-
-      "vocabulary": [
+      "id": "m01-s01",
+      "number": 1,
+      "title": "Opcional",
+      "capsules": [
         {
-          "id": "m01-s02-logos",   // único en todo el proyecto
-          "greek": "λόγος",
-          "info": "ὁ, -ου",        // genitivo, partes principales, régimen…
-          "es": ["palabra", "razón"], // la primera es la principal
-          "pos": "sustantivo",
-          "notes": "Aparece bajo la respuesta y en el material.",
-          "cards": ["reconocer"]   // opcional; por defecto ambas direcciones
-        }
-      ],
+          "id": "m01-s01-c02",
+          "number": 2,
+          "title": "Opcional",
 
-      "paradigms": [
-        {
-          "id": "m01-s02-logos-decl",
-          "title": "2ª declinación",
-          "lemma": "λόγος, ὁ",
-          "gloss": "la palabra",
-          "axes": [
-            { "id": "numero", "label": "Número",
-              "values": [{ "id": "sg", "label": "Singular" }, { "id": "pl", "label": "Plural" }] },
-            { "id": "caso", "label": "Caso",
-              "values": [{ "id": "nom", "label": "Nominativo" }, { "id": "ac", "label": "Acusativo" }] }
+          "vocabulary": [
+            {
+              "id": "m01-s01-logos",      // único en todo el proyecto
+              "greek": "λόγος",
+              "info": "ὁ, -ου",           // genitivo, partes principales, régimen…
+              "es": ["palabra", "razón"], // la primera es la principal
+              "pos": "sustantivo",
+              "notes": "Aparece bajo la respuesta y en el material.",
+              "cards": ["reconocer"]      // opcional; por defecto ambas direcciones
+            }
           ],
-          // La clave une los ids de cada eje en el orden declarado.
-          // Un array lista varias formas aceptadas.
-          "cells": {
-            "sg|nom": "λόγος",
-            "sg|ac": "λόγον",
-            "pl|nom": "λόγοι",
-            "pl|ac": ["λόγους", "λόγος"]
-          },
-          "notes": "Nota al pie de la tabla."
-        }
-      ],
 
-      "sentences": [
-        {
-          "id": "m01-s02-f1",
-          "greek": "ὁ λόγος καλός.",
-          "es": ["La palabra es hermosa."],  // varias traducciones válidas
-          "hint": "Pista opcional, se pide a mano."
-        }
-      ],
+          "paradigms": [
+            {
+              "id": "m01-s01-logos-decl",
+              "title": "2ª declinación",
+              "lemma": "λόγος, ὁ",
+              "gloss": "la palabra",
+              "axes": [
+                { "id": "numero", "label": "Número",
+                  "values": [{ "id": "sg", "label": "Singular" }, { "id": "pl", "label": "Plural" }] },
+                { "id": "caso", "label": "Caso",
+                  "values": [{ "id": "nom", "label": "Nominativo" }, { "id": "ac", "label": "Acusativo" }] }
+              ],
+              // La clave une los ids de cada eje en el orden declarado.
+              // Un array lista varias formas aceptadas.
+              "cells": {
+                "sg|nom": "λόγος",
+                "sg|ac": "λόγον",
+                "pl|nom": "λόγοι",
+                "pl|ac": ["λόγους", "λόγος"]
+              },
+              "notes": "Nota al pie de la tabla."
+            }
+          ],
 
-      "grammar": [
-        { "id": "m01-s02-g1", "title": "El artículo", "body": "Explicación." }
+          "sentences": [
+            {
+              "id": "m01-s01-f1",
+              "greek": "ὁ λόγος καλός.",
+              "es": ["La palabra es hermosa."],  // varias traducciones válidas
+              "hint": "Pista opcional, se pide a mano."
+            }
+          ],
+
+          "grammar": [
+            { "id": "m01-s01-g1", "title": "El artículo", "body": "Explicación." }
+          ]
+        }
       ]
     }
   ]
 }
 ```
 
-Los cuatro apartados de una sección pueden ir vacíos (`[]`). Una sección sin
+Los cuatro apartados de una cápsula pueden ir vacíos (`[]`). Una cápsula sin
 contenido aparece en el camino pero no bloquea el paso a la siguiente.
 
-Al terminar, `npm run check-content` avisa de ids repetidos, secciones sin
-número, celdas que no casan con los ejes declarados, paradigmas incompletos y
-texto griego que no esté en forma Unicode NFC.
+Al terminar, `npm run check-content` avisa de ids repetidos, números de sección
+o cápsula duplicados, celdas que no casan con los ejes declarados, paradigmas
+incompletos y texto griego que no esté en forma Unicode NFC.
 
 **Los `id` son la memoria del progreso.** Puedes corregir la grafía, la
-traducción o las notas de una entrada cuando quieras, pero si cambias su `id`
-la app la tratará como una tarjeta nueva y perderás su historial.
+traducción o las notas de una entrada, e incluso moverla de cápsula, sin perder
+su historial. Lo que no puedes es cambiarle el `id`: entonces la app la trata
+como una tarjeta nueva.
 
 ## Cómo se practica
 
@@ -140,8 +172,7 @@ pantalla (pulsa la letra y luego los diacríticos; pulsar el mismo diacrítico
 dos veces lo retira).
 
 La repetición espaciada es SM-2 con pasos de aprendizaje, el mismo esquema de
-Anki: notas de 1 a 4, intervalos crecientes y vuelta a empezar al olvidar. Lo
-que se falla reaparece antes de terminar la sesión.
+Anki: notas de 1 a 4 e intervalos crecientes.
 
 ## Publicar e instalar en el móvil
 
@@ -177,6 +208,6 @@ src/
     session.ts        Une el contenido con las reglas del camino
     db.ts             IndexedDB: progreso, historial, racha, copias
   components/         Teclado, tablas y los cuatro tipos de ejercicio
-  screens/            Camino, sesión, sección, tarjetas, progreso y ajustes
+  screens/            Camino, sesión, cápsula, tarjetas, progreso y ajustes
 scripts/              Validador de contenido y pruebas
 ```

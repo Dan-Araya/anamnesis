@@ -1,13 +1,13 @@
 import type { CardProgress, Settings, VocabEntry } from '@/types'
-import { allVocab, cardsBySection, getNode, path } from '@/content'
+import { allVocab, cardsByCapsule, getNode, path } from '@/content'
 import {
   computeStatuses,
   currentStatus,
   selectQueue,
   shuffle,
   type BuildOptions,
-  type SectionEntry,
-  type SectionStatus,
+  type CapsuleEntry,
+  type CapsuleStatus,
   type SessionItem,
 } from '@/lib/progression'
 
@@ -16,32 +16,31 @@ import {
  * que viven en `progression.ts` y no conocen el contenido.
  */
 
-export type { BuildOptions, SectionStatus, SessionItem }
+export type { BuildOptions, CapsuleStatus, SessionItem }
 export { pickMode } from '@/lib/progression'
 export { shuffle }
 
-const entries: SectionEntry[] = path.map(({ section, module }) => ({
-  section,
-  module,
-  cards: cardsBySection.get(section.id) ?? [],
+const entries: CapsuleEntry[] = path.map((node) => ({
+  ...node,
+  cards: cardsByCapsule.get(node.capsule.id) ?? [],
 }))
 
-export function sectionStatuses(
+export function capsuleStatuses(
   progress: Map<string, CardProgress>,
   settings: Settings,
   now = Date.now(),
-): SectionStatus[] {
+): CapsuleStatus[] {
   return computeStatuses(entries, progress, settings, now)
 }
 
-export function currentSection(statuses: SectionStatus[]): SectionStatus | undefined {
+export function currentCapsule(statuses: CapsuleStatus[]): CapsuleStatus | undefined {
   return currentStatus(statuses)
 }
 
 export function buildSession(
   progress: Map<string, CardProgress>,
   settings: Settings,
-  statuses: SectionStatus[],
+  statuses: CapsuleStatus[],
   options: BuildOptions = {},
   now = Date.now(),
 ): SessionItem[] {
@@ -53,20 +52,18 @@ export function buildSession(
 // ---------------------------------------------------------------------------
 
 /**
- * Elige alternativas plausibles: primero de la misma sección y categoría
+ * Elige alternativas plausibles: primero de la misma cápsula y categoría
  * gramatical, y se va abriendo la búsqueda si no hay suficientes.
  */
-export function distractors(target: VocabEntry, sectionId: string, count = 3): VocabEntry[] {
-  const node = getNode(sectionId)
-  const local = node?.section.vocabulary ?? []
-  const sameModule = node
-    ? node.module.sections.flatMap((s) => s.vocabulary)
-    : []
+export function distractors(target: VocabEntry, capsuleId: string, count = 3): VocabEntry[] {
+  const node = getNode(capsuleId)
+  const local = node?.capsule.vocabulary ?? []
+  const sameSection = node?.section.capsules.flatMap((c) => c.vocabulary) ?? []
 
   const pools = [
     local.filter((v) => v.pos === target.pos),
-    local,
-    sameModule.filter((v) => v.pos === target.pos),
+    sameSection.filter((v) => v.pos === target.pos),
+    sameSection,
     allVocab.filter((v) => v.pos === target.pos),
     allVocab,
   ]

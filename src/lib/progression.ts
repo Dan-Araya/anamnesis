@@ -1,4 +1,5 @@
 import type {
+  Capsule,
   Card,
   CardProgress,
   ExerciseMode,
@@ -9,13 +10,14 @@ import type {
 import { isDue, mastery, newProgress } from '@/lib/srs'
 
 /**
- * Reglas del camino: qué secciones están abiertas y qué entra en cada sesión.
+ * Reglas del camino: qué cápsulas están abiertas y qué entra en cada sesión.
  *
- * Este archivo no importa el contenido: recibe las secciones ya resueltas. Así
+ * Este archivo no importa el contenido: recibe las cápsulas ya resueltas. Así
  * las reglas se pueden probar sin arrastrar el cargador de JSON.
  */
 
-export interface SectionEntry {
+export interface CapsuleEntry {
+  capsule: Capsule
   section: Section
   module: ModuleContent
   cards: Card[]
@@ -29,11 +31,12 @@ export interface SessionItem {
   isNew: boolean
 }
 
-export interface SectionStatus {
+export interface CapsuleStatus {
+  capsule: Capsule
   section: Section
   module: ModuleContent
   unlocked: boolean
-  /** Nulo cuando la sección aún no tiene contenido. */
+  /** Nulo cuando la cápsula aún no tiene contenido. */
   mastery: number | null
   /** Ha alcanzado el umbral: el nodo se pinta como superado. */
   completed: boolean
@@ -44,8 +47,8 @@ export interface SectionStatus {
 }
 
 export interface BuildOptions {
-  /** Practicar solo esta sección (al pulsar su nodo en el camino). */
-  sectionId?: string
+  /** Practicar esta cápsula (al pulsar su nodo en el camino). */
+  capsuleId?: string
   /** No introducir material nuevo: solo repasar lo ya visto. */
   onlyReviews?: boolean
   /** Ignorar el objetivo diario y los límites de tarjetas nuevas. */
@@ -54,25 +57,28 @@ export interface BuildOptions {
   newToday?: number
 }
 
+/** Tope de la proporción de repaso: siempre queda sitio para lo nuevo. */
+const MAX_MIX = 0.8
+
 // ---------------------------------------------------------------------------
 // Estado y desbloqueo
 // ---------------------------------------------------------------------------
 
 /**
- * El camino es lineal y atraviesa los módulos: la primera sección siempre está
- * abierta y cada una se abre cuando la anterior alcanza el umbral de dominio.
- * Una sección todavía sin contenido no bloquea a la siguiente.
+ * El camino es lineal y atraviesa secciones y módulos: la primera cápsula
+ * siempre está abierta y cada una se abre cuando la anterior alcanza el umbral
+ * de dominio. Una cápsula todavía sin contenido no bloquea a la siguiente.
  */
 export function computeStatuses(
-  entries: SectionEntry[],
+  entries: CapsuleEntry[],
   progress: Map<string, CardProgress>,
   settings: Settings,
   now = Date.now(),
-): SectionStatus[] {
-  const result: SectionStatus[] = []
+): CapsuleStatus[] {
+  const result: CapsuleStatus[] = []
   let previousCleared = true
 
-  for (const { section, module, cards } of entries) {
+  for (const { capsule, section, module, cards } of entries) {
     let sum = 0
     let started = 0
     let due = 0
@@ -96,6 +102,7 @@ export function computeStatuses(
     const cleared = score === null || score >= settings.unlockThreshold
 
     result.push({
+      capsule,
       section,
       module,
       unlocked,
@@ -114,7 +121,7 @@ export function computeStatuses(
 }
 
 /** El nodo en el que está el usuario: el primero abierto sin terminar. */
-export function currentStatus(statuses: SectionStatus[]): SectionStatus | undefined {
+export function currentStatus(statuses: CapsuleStatus[]): CapsuleStatus | undefined {
   const open = statuses.filter((s) => s.unlocked && s.total > 0)
   return open.find((s) => !s.completed) ?? open.at(-1)
 }
@@ -163,50 +170,103 @@ function interleave(reviews: SessionItem[], fresh: SessionItem[]): SessionItem[]
   return out
 }
 
+const toItem = (card: Card, progress: CardProgress): SessionItem => ({
+  card,
+  progress,
+  mode: pickMode(card, progress),
+  isNew: false,
+})
+
+/**
+ * Arma la cola de una sesión.
+ *
+ * Practicar una cápsula no es repasar solo su vocabulario: se mezcla con
+ * material de las cápsulas anteriores, para que lo aprendido siga volviendo en
+ * vez de darse por sabido. Entran primero las tarjetas que ya han vencido y,
+ * si no bastan para llenar la proporción de repaso, se adelantan las que están
+ * más cerca de vencer, dando prioridad a lo de la misma sección.
+ */
 export function selectQueue(
-  entries: SectionEntry[],
-  statuses: SectionStatus[],
+  entries: CapsuleEntry[],
+  statuses: CapsuleStatus[],
   progress: Map<string, CardProgress>,
   settings: Settings,
   options: BuildOptions = {},
   now = Date.now(),
 ): SessionItem[] {
-  const open = new Set(
-    statuses
-      .filter((s) => s.unlocked && (!options.sectionId || s.section.id === options.sectionId))
-      .map((s) => s.section.id),
+  const unlocked = new Set(
+    statuses.filter((s) => s.unlocked).map((s) => s.capsule.id),
   )
+  const target = options.capsuleId
+    ? entries.find((e) => e.capsule.id === options.capsuleId)
+    : undefined
 
-  const reviews: SessionItem[] = []
   const fresh: Card[] = []
+  const dueCards: { card: Card; progress: CardProgress }[] = []
+  const upcoming: { card: Card; progress: CardProgress; rank: number }[] = []
 
-  for (const { section, cards } of entries) {
-    if (!open.has(section.id)) continue
-    for (const card of cards) {
+  for (const entry of entries) {
+    if (!unlocked.has(entry.capsule.id)) continue
+
+    // Cercanía respecto a la cápsula que se está practicando: lo de la misma
+    // sección se recuerda antes que lo de un módulo lejano.
+    const rank = !target
+      ? 0
+      : entry.section.id === target.section.id
+        ? 0
+        : entry.module.id === target.module.id
+          ? 1
+          : 2
+
+    for (const card of entry.cards) {
       const p = progress.get(card.id)
       if (!p) {
-        fresh.push(card)
+        // Solo se introduce material nuevo de la cápsula elegida.
+        if (!target || entry.capsule.id === target.capsule.id) fresh.push(card)
       } else if (isDue(p, now)) {
-        reviews.push({ card, progress: p, mode: pickMode(card, p), isNew: false })
+        dueCards.push({ card, progress: p })
+      } else {
+        upcoming.push({ card, progress: p, rank })
       }
     }
   }
 
-  reviews.sort((a, b) => a.progress.due - b.progress.due)
+  dueCards.sort((a, b) => a.progress.due - b.progress.due)
+  upcoming.sort((a, b) => a.rank - b.rank || a.progress.due - b.progress.due)
 
-  // El repaso global no introduce material nuevo: eso es cosa del camino.
+  // --- Material nuevo ------------------------------------------------------
   const newBudget = options.onlyReviews
     ? 0
     : options.unlimited
       ? fresh.length
       : Math.max(0, settings.newPerDay - (options.newToday ?? 0))
 
-  const freshItems: SessionItem[] = fresh.slice(0, newBudget).map((card) => {
-    const p = newProgress(card, now)
-    return { card, progress: p, mode: pickMode(card, p), isNew: true }
-  })
+  const freshItems: SessionItem[] = fresh.slice(0, newBudget).map((card) => ({
+    card,
+    progress: newProgress(card, now),
+    mode: pickMode(card, newProgress(card, now)),
+    isNew: true,
+  }))
 
-  const queue = interleave(reviews, freshItems)
+  // --- Repaso --------------------------------------------------------------
+  const reviewItems: SessionItem[] = dueCards.map((c) => toItem(c.card, c.progress))
+
+  if (!options.onlyReviews && freshItems.length > 0) {
+    const mix = Math.min(MAX_MIX, Math.max(0, settings.mixRatio))
+    // Cuántos repasos hacen falta para que supongan `mix` de la sesión.
+    const wanted = Math.round((freshItems.length * mix) / (1 - mix))
+    const missing = wanted - reviewItems.length
+    if (missing > 0) {
+      // Se adelantan repasos que aún no tocaban: responderlos antes de tiempo
+      // no alarga su intervalo (lo controla `schedule`), así que refrescan
+      // sin falsear la programación.
+      for (const c of upcoming.slice(0, missing)) {
+        reviewItems.push(toItem(c.card, c.progress))
+      }
+    }
+  }
+
+  const queue = interleave(reviewItems, freshItems)
   return options.unlimited ? queue : queue.slice(0, settings.dailyGoal)
 }
 

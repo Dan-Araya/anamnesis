@@ -7,34 +7,40 @@ import Flashcard from '@/components/exercises/Flashcard'
 import TypeAnswer from '@/components/exercises/TypeAnswer'
 import Translate from '@/components/exercises/Translate'
 
+/** Cuántas veces como mucho puede reaparecer una tarjeta en la misma sesión. */
+const MAX_REPETICIONES = 4
+
 /**
  * Una sesión de práctica: una cola de tarjetas que se va consumiendo.
- * Lo que se falla vuelve al final de la cola para verlo otra vez hoy, no
- * dentro de dos días.
+ *
+ * Una tarjeta vuelve a la cola mientras siga en aprendizaje, no solo cuando se
+ * falla: así el material nuevo se ve un par de veces antes de terminar y llega
+ * a graduarse, en lugar de darse por sabido a la primera.
  */
 export default function SessionScreen({
-  sectionId,
+  capsuleId,
   onlyReviews,
   onExit,
   onOpenMaterial,
 }: {
-  sectionId?: string
+  capsuleId?: string
   onlyReviews?: boolean
   onExit: () => void
-  onOpenMaterial?: (sectionId: string) => void
+  onOpenMaterial?: (capsuleId: string) => void
 }) {
   const { settings, progress, statuses, today, review } = useStore()
 
   // La cola se fija al entrar: que no se reordene sola mientras respondes.
   const [queue, setQueue] = useState<SessionItem[]>(() =>
     buildSession(progress, settings, statuses, {
-      sectionId,
+      capsuleId,
       onlyReviews,
       newToday: today.newCards,
     }),
   )
   const [index, setIndex] = useState(0)
   const [answered, setAnswered] = useState({ total: 0, correct: 0 })
+  const repeticiones = useRef(new Map<string, number>())
   const startedAt = useRef(Date.now())
   const shownAt = useRef(Date.now())
 
@@ -48,13 +54,17 @@ export default function SessionScreen({
     const next = await review({ card: item.card, grade, mode: item.mode, durationMs })
     setAnswered((a) => ({ total: a.total + 1, correct: a.correct + (grade > 1 ? 1 : 0) }))
 
-    // Fallada: se vuelve a ver antes de terminar.
-    if (grade === 1) {
+    const vistas = repeticiones.current.get(item.card.id) ?? 1
+    const sinAsentar = next.state === 'aprendiendo' || next.state === 'reaprendiendo'
+
+    if (sinAsentar && vistas < MAX_REPETICIONES) {
+      repeticiones.current.set(item.card.id, vistas + 1)
       setQueue((q) => [
         ...q,
         { card: item.card, progress: next, mode: pickMode(item.card, next), isNew: false },
       ])
     }
+
     setIndex((i) => i + 1)
   }
 
@@ -64,7 +74,7 @@ export default function SessionScreen({
         answered={answered}
         durationMs={Date.now() - startedAt.current}
         empty={queue.length === 0}
-        sectionId={sectionId}
+        capsuleId={capsuleId}
         onExit={onExit}
         onOpenMaterial={onOpenMaterial}
       />
@@ -120,16 +130,16 @@ function Resumen({
   answered,
   durationMs,
   empty,
-  sectionId,
+  capsuleId,
   onExit,
   onOpenMaterial,
 }: {
   answered: { total: number; correct: number }
   durationMs: number
   empty: boolean
-  sectionId?: string
+  capsuleId?: string
   onExit: () => void
-  onOpenMaterial?: (sectionId: string) => void
+  onOpenMaterial?: (capsuleId: string) => void
 }) {
   const accuracy = answered.total
     ? Math.round((answered.correct / answered.total) * 100)
@@ -175,13 +185,13 @@ function Resumen({
         <button type="button" className="btn btn--primary btn--wide" onClick={onExit}>
           Volver al camino
         </button>
-        {sectionId && onOpenMaterial && (
+        {capsuleId && onOpenMaterial && (
           <button
             type="button"
             className="btn btn--wide"
-            onClick={() => onOpenMaterial(sectionId)}
+            onClick={() => onOpenMaterial(capsuleId)}
           >
-            Ver el material de esta sección
+            Ver el material de esta cápsula
           </button>
         )}
       </div>

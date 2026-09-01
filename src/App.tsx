@@ -2,15 +2,15 @@ import { useEffect, useState } from 'react'
 import { useStore } from '@/store'
 import PathScreen from '@/screens/PathScreen'
 import SessionScreen from '@/screens/SessionScreen'
-import SectionScreen from '@/screens/SectionScreen'
+import CapsuleScreen from '@/screens/CapsuleScreen'
 import CardsScreen from '@/screens/CardsScreen'
 import StatsScreen from '@/screens/StatsScreen'
 import SettingsScreen from '@/screens/SettingsScreen'
 
 type Route =
   | { name: 'camino' }
-  | { name: 'sesion'; sectionId?: string; onlyReviews?: boolean }
-  | { name: 'seccion'; id: string }
+  | { name: 'sesion'; capsuleId?: string; onlyReviews?: boolean }
+  | { name: 'capsula'; id: string }
   | { name: 'tarjetas' }
   | { name: 'progreso' }
   | { name: 'ajustes' }
@@ -46,12 +46,12 @@ export default function App() {
     return (
       <div className="app">
         <SessionScreen
-          sectionId={route.sectionId}
+          capsuleId={route.capsuleId}
           onlyReviews={route.onlyReviews}
           onExit={() =>
             setRoute(route.onlyReviews ? { name: 'tarjetas' } : { name: 'camino' })
           }
-          onOpenMaterial={(id) => setRoute({ name: 'seccion', id })}
+          onOpenMaterial={(id) => setRoute({ name: 'capsula', id })}
         />
       </div>
     )
@@ -60,13 +60,13 @@ export default function App() {
   return (
     <div className="app">
       {route.name === 'camino' && (
-        <PathScreen onPractice={(sectionId) => setRoute({ name: 'sesion', sectionId })} />
+        <PathScreen onPractice={(capsuleId) => setRoute({ name: 'sesion', capsuleId })} />
       )}
-      {route.name === 'seccion' && (
-        <SectionScreen
-          sectionId={route.id}
+      {route.name === 'capsula' && (
+        <CapsuleScreen
+          capsuleId={route.id}
           onBack={() => setRoute({ name: 'camino' })}
-          onPractice={(sectionId) => setRoute({ name: 'sesion', sectionId })}
+          onPractice={(capsuleId) => setRoute({ name: 'sesion', capsuleId })}
         />
       )}
       {route.name === 'tarjetas' && (
@@ -81,7 +81,7 @@ export default function App() {
       <nav className="nav">
         {TABS.map((tab) => {
           const active =
-            route.name === tab.name || (tab.name === 'camino' && route.name === 'seccion')
+            route.name === tab.name || (tab.name === 'camino' && route.name === 'capsula')
           return (
             <button
               key={tab.name}

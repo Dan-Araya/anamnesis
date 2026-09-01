@@ -24,7 +24,7 @@ export default function MultipleChoice({
   const options = useMemo(() => {
     if (!vocab) return []
     const target = label(vocab)
-    const pool = distractors(vocab, item.card.sectionId, 8)
+    const pool = distractors(vocab, item.card.capsuleId, 8)
       // Descarta alternativas que dirían lo mismo que la respuesta correcta.
       .filter((v) => label(v) !== target)
       .slice(0, 3)

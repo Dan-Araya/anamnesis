@@ -1,30 +1,30 @@
-import { getNode, isEmpty, moduleLabel, sectionLabel } from '@/content'
+import { capsuleLabel, getNode, isEmpty, moduleLabel, sectionLabel } from '@/content'
 import ParadigmTable from '@/components/ParadigmTable'
 
 /**
- * El material de una sección, para consultarlo fuera de la práctica. Se llega
+ * El material de una cápsula, para consultarlo fuera de la práctica. Se llega
  * desde el final de una sesión: el camino en sí entra directo a practicar.
  */
-export default function SectionScreen({
-  sectionId,
+export default function CapsuleScreen({
+  capsuleId,
   onBack,
   onPractice,
 }: {
-  sectionId: string
+  capsuleId: string
   onBack: () => void
-  onPractice: (sectionId: string) => void
+  onPractice: (capsuleId: string) => void
 }) {
-  const node = getNode(sectionId)
+  const node = getNode(capsuleId)
 
   if (!node) {
     return (
       <div className="screen">
-        <p className="vacio">No se encuentra la sección.</p>
+        <p className="vacio">No se encuentra la cápsula.</p>
       </div>
     )
   }
 
-  const { section, module } = node
+  const { capsule, section, module } = node
 
   return (
     <div className="screen">
@@ -33,15 +33,15 @@ export default function SectionScreen({
       </button>
 
       <div className="modulo__num" style={{ marginTop: 12 }}>
-        {moduleLabel(module)}
+        {moduleLabel(module)} · {sectionLabel(section)}
       </div>
       <h1 className="screen__title" style={{ marginTop: 2 }}>
-        {sectionLabel(section)}
+        {capsuleLabel(capsule)}
       </h1>
 
-      {isEmpty(section) ? (
+      {isEmpty(capsule) ? (
         <div className="card">
-          <strong>Sección vacía</strong>
+          <strong>Cápsula vacía</strong>
           <p className="muted small">
             Añade el contenido en <code>src/content/modules/{module.id}.json</code>.
           </p>
@@ -51,20 +51,20 @@ export default function SectionScreen({
           type="button"
           className="btn btn--primary btn--wide"
           style={{ marginBottom: 20 }}
-          onClick={() => onPractice(section.id)}
+          onClick={() => onPractice(capsule.id)}
         >
-          Practicar esta sección
+          Practicar esta cápsula
         </button>
       )}
 
-      {section.vocabulary.length > 0 && (
+      {capsule.vocabulary.length > 0 && (
         <section>
           <h2 className="screen__title" style={{ fontSize: '1.1rem' }}>
             Vocabulario
           </h2>
           <div className="card">
             <ul className="lista">
-              {section.vocabulary.map((v) => (
+              {capsule.vocabulary.map((v) => (
                 <li key={v.id}>
                   <span>
                     <span className="griego" style={{ fontSize: '1.15rem' }}>
@@ -83,7 +83,7 @@ export default function SectionScreen({
         </section>
       )}
 
-      {section.paradigms.map((p) => (
+      {capsule.paradigms.map((p) => (
         <section key={p.id}>
           <h2 className="screen__title" style={{ fontSize: '1.1rem', marginTop: 24 }}>
             {p.title}
@@ -105,13 +105,13 @@ export default function SectionScreen({
         </section>
       ))}
 
-      {section.sentences.length > 0 && (
+      {capsule.sentences.length > 0 && (
         <section>
           <h2 className="screen__title" style={{ fontSize: '1.1rem', marginTop: 24 }}>
             Frases
           </h2>
           <div className="card">
-            {section.sentences.map((s) => (
+            {capsule.sentences.map((s) => (
               <div key={s.id} style={{ marginBottom: 12 }}>
                 <div className="griego" style={{ fontSize: '1.1rem' }}>
                   {s.greek}
@@ -123,12 +123,12 @@ export default function SectionScreen({
         </section>
       )}
 
-      {section.grammar.length > 0 && (
+      {capsule.grammar.length > 0 && (
         <section>
           <h2 className="screen__title" style={{ fontSize: '1.1rem', marginTop: 24 }}>
             Gramática
           </h2>
-          {section.grammar.map((g) => (
+          {capsule.grammar.map((g) => (
             <div className="card" key={g.id}>
               <strong>{g.title}</strong>
               <p className="small" style={{ marginBottom: 0 }}>

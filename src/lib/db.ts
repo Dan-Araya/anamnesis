@@ -10,14 +10,19 @@ const DB_NAME = 'griego-antiguo'
 /**
  * v2: el contenido pasó a organizarse en secciones y los identificadores de
  * tarjeta cambiaron, así que el progreso de la v1 ya no apunta a nada.
+ * v3: el progreso deja de guardar a qué módulo pertenece cada tarjeta; ese
+ * dato lo aporta el contenido. Los registros se conservan.
  */
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 export const DEFAULT_SETTINGS: Settings = {
   newPerDay: 10,
   dailyGoal: 40,
+  mixRatio: 0.4,
   strictDiacritics: false,
-  unlockThreshold: 0.6,
+  // Con 0,5 basta con haber graduado la mayoría de las tarjetas de la cápsula:
+  // una rezagada no bloquea el camino.
+  unlockThreshold: 0.5,
   showKeyboard: true,
   theme: 'oscuro',
 }
@@ -26,7 +31,7 @@ interface Schema extends DBSchema {
   progress: {
     key: string
     value: CardProgress
-    indexes: { due: number; moduleId: string }
+    indexes: { due: number }
   }
   reviews: {
     key: number
@@ -51,7 +56,6 @@ function db(): Promise<IDBPDatabase<Schema>> {
       if (oldVersion < 1) {
         const progress = database.createObjectStore('progress', { keyPath: 'cardId' })
         progress.createIndex('due', 'due')
-        progress.createIndex('moduleId', 'moduleId')
 
         const reviews = database.createObjectStore('reviews', {
           keyPath: 'id',
@@ -70,6 +74,16 @@ function db(): Promise<IDBPDatabase<Schema>> {
         tx.objectStore('progress').clear()
         tx.objectStore('reviews').clear()
         tx.objectStore('daily').clear()
+      }
+
+      if (oldVersion > 0 && oldVersion < 3) {
+        // El progreso ya no se agrupa por módulo desde la propia tarjeta. El
+        // índice ha salido del esquema tipado, así que se borra con la API cruda.
+        const store = tx.objectStore('progress') as unknown as {
+          indexNames: DOMStringList
+          deleteIndex(name: string): void
+        }
+        if (store.indexNames.contains('moduleId')) store.deleteIndex('moduleId')
       }
     },
   })
