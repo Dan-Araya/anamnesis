@@ -1,249 +1,42 @@
 {
   "id": "module-01",
   "number": 1,
-  "title": "Primeros pasos",
-  "summary": "Alfabeto asentado, artículo definido y el vocabulario más frecuente.",
-  "vocabulary": [
+  "sections": [
     {
-      "id": "m01-anthropos",
-      "greek": "ἄνθρωπος",
-      "info": "ὁ, -ου",
-      "es": ["hombre", "ser humano", "persona"],
-      "pos": "sustantivo",
-      "tags": ["2ª declinación"]
-    },
-    {
-      "id": "m01-logos",
-      "greek": "λόγος",
-      "info": "ὁ, -ου",
-      "es": ["palabra", "razón", "discurso"],
-      "pos": "sustantivo",
-      "tags": ["2ª declinación"]
-    },
-    {
-      "id": "m01-theos",
-      "greek": "θεός",
-      "info": "ὁ, -οῦ",
-      "es": ["dios"],
-      "pos": "sustantivo",
-      "tags": ["2ª declinación"]
-    },
-    {
-      "id": "m01-nesos",
-      "greek": "νῆσος",
-      "info": "ἡ, -ου",
-      "es": ["isla"],
-      "pos": "sustantivo",
-      "notes": "Femenino a pesar de seguir la 2ª declinación.",
-      "tags": ["2ª declinación"]
-    },
-    {
-      "id": "m01-ergon",
-      "greek": "ἔργον",
-      "info": "τό, -ου",
-      "es": ["obra", "trabajo", "acción"],
-      "pos": "sustantivo",
-      "tags": ["2ª declinación", "neutro"]
-    },
-    {
-      "id": "m01-kalos",
-      "greek": "καλός",
-      "info": "-ή, -όν",
-      "es": ["hermoso", "bello", "noble"],
-      "pos": "adjetivo"
-    },
-    {
-      "id": "m01-agathos",
-      "greek": "ἀγαθός",
-      "info": "-ή, -όν",
-      "es": ["bueno", "valiente"],
-      "pos": "adjetivo"
-    },
-    {
-      "id": "m01-eimi",
-      "greek": "εἰμί",
-      "info": "ser, estar, haber",
-      "es": ["ser", "estar"],
-      "pos": "verbo",
-      "notes": "Verbo irregular, enclítico salvo en 2ª persona del singular (εἶ)."
-    },
-    {
-      "id": "m01-kai",
-      "greek": "καί",
-      "es": ["y", "también", "incluso"],
-      "pos": "conjuncion"
-    },
-    {
-      "id": "m01-de",
-      "greek": "δέ",
-      "es": ["pero", "y", "por otra parte"],
-      "pos": "particula",
-      "notes": "Pospositiva: nunca va en primera posición de la frase."
-    },
-    {
-      "id": "m01-men",
-      "greek": "μέν",
-      "es": ["por un lado"],
-      "pos": "particula",
-      "notes": "Anuncia un δέ posterior: μέν… δέ… = «por un lado… por otro…»."
-    },
-    {
-      "id": "m01-ou",
-      "greek": "οὐ",
-      "info": "οὐκ ante vocal, οὐχ ante aspirada",
-      "es": ["no"],
-      "pos": "adverbio"
-    },
-    {
-      "id": "m01-en",
-      "greek": "ἐν",
-      "info": "+ dativo",
-      "es": ["en", "dentro de"],
-      "pos": "preposicion"
-    },
-    {
-      "id": "m01-eis",
-      "greek": "εἰς",
-      "info": "+ acusativo",
-      "es": ["hacia", "a", "hasta"],
-      "pos": "preposicion"
-    }
-  ],
-  "paradigms": [
-    {
-      "id": "m01-articulo",
-      "title": "Artículo definido",
-      "lemma": "ὁ, ἡ, τό",
-      "gloss": "el, la, lo",
-      "axes": [
+      "id": "m01-s01",
+      "number": 1,
+      "vocabulary": [
         {
-          "id": "genero",
-          "label": "Género",
-          "values": [
-            { "id": "m", "label": "Masculino" },
-            { "id": "f", "label": "Femenino" },
-            { "id": "n", "label": "Neutro" }
-          ]
+          "id": "m01-s01-de",
+          "greek": "δέ",
+          "es": ["y", "pero"],
+          "pos": "particula",
+          "notes": "Pospositiva: nunca abre la frase, va en segunda posición."
         },
         {
-          "id": "numero",
-          "label": "Número",
-          "values": [
-            { "id": "sg", "label": "Singular" },
-            { "id": "pl", "label": "Plural" }
-          ]
+          "id": "m01-s01-epeita",
+          "greek": "ἔπειτα",
+          "es": ["luego", "después", "a continuación"],
+          "pos": "adverbio"
         },
         {
-          "id": "caso",
-          "label": "Caso",
-          "values": [
-            { "id": "nom", "label": "Nominativo" },
-            { "id": "ac", "label": "Acusativo" },
-            { "id": "gen", "label": "Genitivo" },
-            { "id": "dat", "label": "Dativo" }
-          ]
+          "id": "m01-s01-kai",
+          "greek": "καί",
+          "es": ["y", "también"],
+          "pos": "conjuncion"
+        },
+        {
+          "id": "m01-s01-te-kai",
+          "greek": "τε … καί",
+          "es": ["tanto A como B", "tanto… como…"],
+          "pos": "expresion",
+          "cards": ["reconocer"],
+          "notes": "τε es enclítica y pospositiva: se coloca detrás del primer elemento."
         }
       ],
-      "cells": {
-        "m|sg|nom": "ὁ",
-        "m|sg|ac": "τόν",
-        "m|sg|gen": "τοῦ",
-        "m|sg|dat": "τῷ",
-        "m|pl|nom": "οἱ",
-        "m|pl|ac": "τούς",
-        "m|pl|gen": "τῶν",
-        "m|pl|dat": "τοῖς",
-        "f|sg|nom": "ἡ",
-        "f|sg|ac": "τήν",
-        "f|sg|gen": "τῆς",
-        "f|sg|dat": "τῇ",
-        "f|pl|nom": "αἱ",
-        "f|pl|ac": "τάς",
-        "f|pl|gen": "τῶν",
-        "f|pl|dat": "ταῖς",
-        "n|sg|nom": "τό",
-        "n|sg|ac": "τό",
-        "n|sg|gen": "τοῦ",
-        "n|sg|dat": "τῷ",
-        "n|pl|nom": "τά",
-        "n|pl|ac": "τά",
-        "n|pl|gen": "τῶν",
-        "n|pl|dat": "τοῖς"
-      },
-      "notes": "En neutro el nominativo y el acusativo son siempre idénticos."
-    },
-    {
-      "id": "m01-anthropos-decl",
-      "title": "2ª declinación masculina",
-      "lemma": "ἄνθρωπος, ὁ",
-      "gloss": "el hombre",
-      "axes": [
-        {
-          "id": "numero",
-          "label": "Número",
-          "values": [
-            { "id": "sg", "label": "Singular" },
-            { "id": "pl", "label": "Plural" }
-          ]
-        },
-        {
-          "id": "caso",
-          "label": "Caso",
-          "values": [
-            { "id": "nom", "label": "Nominativo" },
-            { "id": "voc", "label": "Vocativo" },
-            { "id": "ac", "label": "Acusativo" },
-            { "id": "gen", "label": "Genitivo" },
-            { "id": "dat", "label": "Dativo" }
-          ]
-        }
-      ],
-      "cells": {
-        "sg|nom": "ἄνθρωπος",
-        "sg|voc": "ἄνθρωπε",
-        "sg|ac": "ἄνθρωπον",
-        "sg|gen": "ἀνθρώπου",
-        "sg|dat": "ἀνθρώπῳ",
-        "pl|nom": "ἄνθρωποι",
-        "pl|voc": "ἄνθρωποι",
-        "pl|ac": "ἀνθρώπους",
-        "pl|gen": "ἀνθρώπων",
-        "pl|dat": "ἀνθρώποις"
-      }
-    }
-  ],
-  "sentences": [
-    {
-      "id": "m01-s1",
-      "greek": "ὁ ἄνθρωπος ἀγαθός ἐστιν.",
-      "es": ["El hombre es bueno."]
-    },
-    {
-      "id": "m01-s2",
-      "greek": "καλὴ ἡ νῆσος καὶ καλὰ τὰ ἔργα.",
-      "es": [
-        "Hermosa es la isla y hermosas las obras.",
-        "La isla es hermosa y las obras son hermosas."
-      ],
-      "hint": "El verbo «ser» puede quedar sobreentendido."
-    },
-    {
-      "id": "m01-s3",
-      "greek": "οἱ μὲν θεοὶ ἐν τῇ νήσῳ, οἱ δὲ ἄνθρωποι οὔ.",
-      "es": ["Los dioses están en la isla, pero los hombres no."],
-      "hint": "μέν… δέ… contrapone dos miembros."
-    }
-  ],
-  "grammar": [
-    {
-      "id": "m01-g1",
-      "title": "El artículo y la posición atributiva",
-      "body": "El adjetivo entre artículo y sustantivo es atributivo: ὁ ἀγαθὸς ἄνθρωπος = «el hombre bueno». Fuera de esa posición, con el sustantivo articulado, es predicativo: ἀγαθὸς ὁ ἄνθρωπος = «el hombre es bueno»."
-    },
-    {
-      "id": "m01-g2",
-      "title": "Orden de palabras",
-      "body": "El griego marca la función con el caso, no con el orden. ὁ ἄνθρωπος τὸν θεὸν ὁρᾷ y τὸν θεὸν ὁ ἄνθρωπος ὁρᾷ significan lo mismo; cambia el énfasis."
+      "paradigms": [],
+      "sentences": [],
+      "grammar": []
     }
   ]
 }

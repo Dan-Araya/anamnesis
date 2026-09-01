@@ -6,90 +6,114 @@ App de práctica diaria de griego antiguo para el móvil. PWA instalable, sin
 servidor ni cuentas: el contenido va en archivos JSON del repositorio y el
 progreso vive en el IndexedDB del dispositivo.
 
-El material está organizado en **módulos** numerados que se abren en orden: el
-módulo siguiente se desbloquea al alcanzar el umbral de dominio del anterior
-(60 % por defecto, ajustable).
+## Cómo está organizada
+
+La pantalla principal es **el camino**: un scroll continuo de nodos. Cada nodo
+es una **sección** y al pulsarlo se practica directamente, sin pantallas
+intermedias. Los **módulos** no se visitan: son los rótulos que separan tramos
+del camino.
+
+El avance es lineal. Una sección se abre cuando la anterior alcanza el umbral
+de dominio (60 % por defecto), y el camino sigue de un módulo al siguiente sin
+cambiar de pantalla.
+
+Las cuatro pestañas:
+
+| Pestaña      | Para qué                                                          |
+| ------------ | ----------------------------------------------------------------- |
+| **Camino**   | Avanzar. Es donde entra el material nuevo                          |
+| **Tarjetas** | Repasar lo ya visto de todas las secciones, con la racha del día   |
+| **Progreso** | Historial, precisión y previsión de repasos                        |
+| **Ajustes**  | Ritmo diario, exigencia con los diacríticos, copias de seguridad   |
 
 ## Comandos
 
-| Comando                 | Qué hace                                              |
-| ----------------------- | ----------------------------------------------------- |
+| Comando                 | Qué hace                                               |
+| ----------------------- | ------------------------------------------------------ |
 | `npm run dev`           | Servidor de desarrollo (`--host` para verlo en la LAN) |
-| `npm test`              | Pruebas de la lógica y de la interfaz                  |
-| `npm run check-content` | Valida los JSON de contenido antes de publicar         |
-| `npm run build`         | Comprueba tipos y compila a `dist/`                    |
-| `npm run deploy`        | Compila y publica en GitHub Pages                      |
+| `npm test`              | Pruebas de la lógica y de la interfaz                   |
+| `npm run check-content` | Valida los JSON de contenido antes de publicar          |
+| `npm run build`         | Comprueba tipos y compila a `dist/`                     |
+| `npm run deploy`        | Compila y publica en GitHub Pages                       |
 
 ## Añadir contenido
 
-Cada módulo es un archivo en `src/content/modules/`. Copia `module-03.json`,
-súbele el número y rellénalo: el cargador recoge automáticamente cualquier
-`.json` de esa carpeta y los ordena por `number`. No hay que registrar nada.
+Cada módulo es un archivo en `src/content/modules/`, y contiene secciones. El
+cargador recoge automáticamente cualquier `.json` de esa carpeta y ordena por
+`number`, así que no hay que registrar nada. Tienes una plantilla lista para
+copiar en `src/content/plantilla.json` (está fuera de `modules/` justamente
+para que no aparezca como un módulo más).
 
 ```jsonc
 {
-  "id": "module-04",          // único; no lo cambies después
-  "number": 4,
-  "title": "Aoristo",
-  "summary": "Descripción corta que se ve en la lista.",
-
-  "vocabulary": [
+  "id": "module-01",          // único; no lo cambies después
+  "number": 1,
+  "title": "Opcional",        // sin título se muestra «Módulo 1»
+  "sections": [
     {
-      "id": "m04-luo",        // único en todo el proyecto
-      "greek": "λύω",
-      "info": "λύσω, ἔλυσα",  // opcional: genitivo, partes principales, régimen
-      "es": ["soltar", "desatar"], // la primera es la principal
-      "pos": "verbo",
-      "notes": "Aparece bajo la respuesta.",
-      "tags": ["temático"]
-    }
-  ],
+      "id": "m01-s02",
+      "number": 2,
+      "title": "Opcional",    // sin título se muestra «Sección 2»
 
-  "paradigms": [
-    {
-      "id": "m04-luo-aor",
-      "title": "Aoristo de indicativo activo",
-      "lemma": "λύω",
-      "gloss": "solté",
-      "axes": [
-        { "id": "numero", "label": "Número",
-          "values": [{ "id": "sg", "label": "Singular" }, { "id": "pl", "label": "Plural" }] },
-        { "id": "persona", "label": "Persona",
-          "values": [{ "id": "1", "label": "1ª" }, { "id": "2", "label": "2ª" }] }
+      "vocabulary": [
+        {
+          "id": "m01-s02-logos",   // único en todo el proyecto
+          "greek": "λόγος",
+          "info": "ὁ, -ου",        // genitivo, partes principales, régimen…
+          "es": ["palabra", "razón"], // la primera es la principal
+          "pos": "sustantivo",
+          "notes": "Aparece bajo la respuesta y en el material.",
+          "cards": ["reconocer"]   // opcional; por defecto ambas direcciones
+        }
       ],
-      // La clave une los ids de cada eje en el orden declarado.
-      // Un array lista varias formas aceptadas.
-      "cells": {
-        "sg|1": "ἔλυσα",
-        "sg|2": "ἔλυσας",
-        "pl|1": "ἐλύσαμεν",
-        "pl|2": "ἐλύσατε"
-      },
-      "notes": "Nota al pie de la tabla."
-    }
-  ],
 
-  "sentences": [
-    {
-      "id": "m04-s1",
-      "greek": "τοὺς ἵππους ἔλυσαν.",
-      "es": ["Soltaron los caballos."],  // varias traducciones válidas
-      "hint": "Pista opcional, se pide a mano."
-    }
-  ],
+      "paradigms": [
+        {
+          "id": "m01-s02-logos-decl",
+          "title": "2ª declinación",
+          "lemma": "λόγος, ὁ",
+          "gloss": "la palabra",
+          "axes": [
+            { "id": "numero", "label": "Número",
+              "values": [{ "id": "sg", "label": "Singular" }, { "id": "pl", "label": "Plural" }] },
+            { "id": "caso", "label": "Caso",
+              "values": [{ "id": "nom", "label": "Nominativo" }, { "id": "ac", "label": "Acusativo" }] }
+          ],
+          // La clave une los ids de cada eje en el orden declarado.
+          // Un array lista varias formas aceptadas.
+          "cells": {
+            "sg|nom": "λόγος",
+            "sg|ac": "λόγον",
+            "pl|nom": "λόγοι",
+            "pl|ac": ["λόγους", "λόγος"]
+          },
+          "notes": "Nota al pie de la tabla."
+        }
+      ],
 
-  "grammar": [
-    { "id": "m04-g1", "title": "El aumento", "body": "Texto explicativo." }
+      "sentences": [
+        {
+          "id": "m01-s02-f1",
+          "greek": "ὁ λόγος καλός.",
+          "es": ["La palabra es hermosa."],  // varias traducciones válidas
+          "hint": "Pista opcional, se pide a mano."
+        }
+      ],
+
+      "grammar": [
+        { "id": "m01-s02-g1", "title": "El artículo", "body": "Explicación." }
+      ]
+    }
   ]
 }
 ```
 
-Los cuatro apartados pueden ir vacíos (`[]`). Un módulo sin contenido aparece
-en la lista pero no bloquea la progresión.
+Los cuatro apartados de una sección pueden ir vacíos (`[]`). Una sección sin
+contenido aparece en el camino pero no bloquea el paso a la siguiente.
 
-Al terminar, `npm run check-content` avisa de ids repetidos, celdas que no
-casan con los ejes declarados, paradigmas incompletos y texto griego que no
-esté en forma Unicode NFC.
+Al terminar, `npm run check-content` avisa de ids repetidos, secciones sin
+número, celdas que no casan con los ejes declarados, paradigmas incompletos y
+texto griego que no esté en forma Unicode NFC.
 
 **Los `id` son la memoria del progreso.** Puedes corregir la grafía, la
 traducción o las notas de una entrada cuando quieras, pero si cambias su `id`
@@ -99,11 +123,15 @@ la app la tratará como una tarjeta nueva y perderás su historial.
 
 De cada entrada de contenido salen varias tarjetas independientes:
 
-| Contenido        | Tarjetas que genera                                       |
-| ---------------- | --------------------------------------------------------- |
-| Palabra          | Reconocer (griego → español) y producir (español → griego) |
-| Celda de tabla   | Una por casilla del paradigma                              |
-| Frase            | Una de traducción                                          |
+| Contenido      | Tarjetas que genera                                        |
+| -------------- | ---------------------------------------------------------- |
+| Palabra        | Reconocer (griego → español) y producir (español → griego)  |
+| Celda de tabla | Una por casilla del paradigma                               |
+| Frase          | Una de traducción                                           |
+
+El campo `cards` permite limitar esas direcciones. Las correlaciones y
+expresiones largas suelen querer solo `["reconocer"]`: no tiene sentido pedir
+que se teclee `τε … καί` letra a letra.
 
 El formato de la pregunta se endurece según se asienta la tarjeta: primero
 opción múltiple, después escribir la forma de memoria o autoevaluarse con una
@@ -117,17 +145,15 @@ que se falla reaparece antes de terminar la sesión.
 
 ## Publicar e instalar en el móvil
 
-La app asume que cuelga de `/anamnesis/` (el nombre del repositorio en
-GitHub Pages). Si publicas en otro sitio, compila con `BASE_PATH=/ npm run build`.
+La app asume que cuelga de `/anamnesis/` (el nombre del repositorio en GitHub
+Pages). Si publicas en otro sitio, compila con `BASE_PATH=/ npm run build`.
 
 ```bash
-git init && git add . && git commit -m "Primera versión"
-gh repo create anamnesis --private --source=. --push
 npm run deploy          # publica dist/ en la rama gh-pages
 ```
 
 En GitHub: **Settings → Pages → Source: Deploy from a branch → `gh-pages` / root**.
-En un par de minutos la app estará en `https://<usuario>.github.io/anamnesis/`.
+En un par de minutos la app estará en `https://dan-araya.github.io/anamnesis/`.
 
 Ábrela en Chrome en el móvil y elige **Añadir a pantalla de inicio**. A partir
 de ahí funciona sin conexión y se actualiza sola cuando vuelvas a publicar.
@@ -143,13 +169,14 @@ src/
   content/
     index.ts          Carga los módulos y deriva las tarjetas
     modules/*.json    El material de estudio
+    plantilla.json    Copia esto para crear un módulo
   lib/
     greek.ts          Unicode politónico, comparación de respuestas, teclado
     srs.ts            Repetición espaciada
-    progression.ts    Desbloqueo de módulos y armado de la sesión
-    session.ts        Une el contenido con las reglas de progresión
+    progression.ts    Desbloqueo del camino y armado de la sesión
+    session.ts        Une el contenido con las reglas del camino
     db.ts             IndexedDB: progreso, historial, racha, copias
   components/         Teclado, tablas y los cuatro tipos de ejercicio
-  screens/            Inicio, sesión, módulos, progreso y ajustes
+  screens/            Camino, sesión, sección, tarjetas, progreso y ajustes
 scripts/              Validador de contenido y pruebas
 ```

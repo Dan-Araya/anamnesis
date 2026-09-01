@@ -13,21 +13,23 @@ import Translate from '@/components/exercises/Translate'
  * dentro de dos días.
  */
 export default function SessionScreen({
-  moduleId,
-  unlimited,
+  sectionId,
+  onlyReviews,
   onExit,
+  onOpenMaterial,
 }: {
-  moduleId?: string
-  unlimited?: boolean
+  sectionId?: string
+  onlyReviews?: boolean
   onExit: () => void
+  onOpenMaterial?: (sectionId: string) => void
 }) {
   const { settings, progress, statuses, today, review } = useStore()
 
   // La cola se fija al entrar: que no se reordene sola mientras respondes.
   const [queue, setQueue] = useState<SessionItem[]>(() =>
     buildSession(progress, settings, statuses, {
-      moduleId,
-      unlimited,
+      sectionId,
+      onlyReviews,
       newToday: today.newCards,
     }),
   )
@@ -62,7 +64,9 @@ export default function SessionScreen({
         answered={answered}
         durationMs={Date.now() - startedAt.current}
         empty={queue.length === 0}
+        sectionId={sectionId}
         onExit={onExit}
+        onOpenMaterial={onOpenMaterial}
       />
     )
   }
@@ -116,12 +120,16 @@ function Resumen({
   answered,
   durationMs,
   empty,
+  sectionId,
   onExit,
+  onOpenMaterial,
 }: {
   answered: { total: number; correct: number }
   durationMs: number
   empty: boolean
+  sectionId?: string
   onExit: () => void
+  onOpenMaterial?: (sectionId: string) => void
 }) {
   const accuracy = answered.total
     ? Math.round((answered.correct / answered.total) * 100)
@@ -163,14 +171,20 @@ function Resumen({
         </div>
       )}
 
-      <button
-        type="button"
-        className="btn btn--primary btn--wide"
-        style={{ marginTop: 20 }}
-        onClick={onExit}
-      >
-        Volver
-      </button>
+      <div className="stack" style={{ marginTop: 20 }}>
+        <button type="button" className="btn btn--primary btn--wide" onClick={onExit}>
+          Volver al camino
+        </button>
+        {sectionId && onOpenMaterial && (
+          <button
+            type="button"
+            className="btn btn--wide"
+            onClick={() => onOpenMaterial(sectionId)}
+          >
+            Ver el material de esta sección
+          </button>
+        )}
+      </div>
     </div>
   )
 }

@@ -1,9 +1,12 @@
 /**
  * Modelo de contenido y de progreso.
  *
- * El contenido vive en `src/content/modules/*.json` y se edita a mano.
+ * El contenido vive en `src/content/modules/*.json` y se edita a mano. Cada
+ * módulo se divide en secciones, y cada sección es un nodo del camino: lo que
+ * se practica de una sentada.
+ *
  * El progreso vive en IndexedDB y nunca se mezcla con el contenido: si
- * reescribes un módulo, las tarjetas conservan su historial mientras el `id`
+ * reescribes una sección, las tarjetas conservan su historial mientras el `id`
  * del ítem no cambie.
  */
 
@@ -24,6 +27,9 @@ export type PartOfSpeech =
   | 'numeral'
   | 'expresion'
 
+/** Qué tarjetas genera una entrada de vocabulario. */
+export type VocabDirection = 'reconocer' | 'producir'
+
 /** Una entrada de vocabulario. `greek` es la forma de cita. */
 export interface VocabEntry {
   id: string
@@ -35,6 +41,12 @@ export interface VocabEntry {
   pos?: PartOfSpeech
   notes?: string
   tags?: string[]
+  /**
+   * Direcciones que se practican. Por defecto ambas. Las correlaciones y
+   * expresiones largas suelen querer solo `["reconocer"]`: no tiene sentido
+   * teclearlas letra a letra.
+   */
+  cards?: VocabDirection[]
 }
 
 /** Un eje de un paradigma (número, caso, persona, tiempo…). */
@@ -69,22 +81,36 @@ export interface Sentence {
   notes?: string
 }
 
-/** Nota de gramática que se puede consultar desde el módulo. */
+/** Nota de gramática que se puede consultar desde la sección. */
 export interface GrammarNote {
   id: string
   title: string
   body: string
 }
 
-export interface ModuleContent {
+/**
+ * Un nodo del camino. Se practica entera de una vez y, al dominarla, abre la
+ * siguiente.
+ */
+export interface Section {
   id: string
+  /** Posición dentro del módulo. El nodo lo muestra mientras no haya título. */
   number: number
-  title: string
-  summary?: string
+  /** Opcional: se le pone nombre cuando la sección está terminada. */
+  title?: string
   vocabulary: VocabEntry[]
   paradigms: Paradigm[]
   sentences: Sentence[]
   grammar: GrammarNote[]
+}
+
+/** Un tramo del camino. Solo agrupa secciones: no se entra en él. */
+export interface ModuleContent {
+  id: string
+  number: number
+  title?: string
+  summary?: string
+  sections: Section[]
 }
 
 // ---------------------------------------------------------------------------
@@ -108,6 +134,7 @@ export type ExerciseMode = 'opcion-multiple' | 'flashcard' | 'escribir' | 'tradu
 export interface Card {
   id: string
   moduleId: string
+  sectionId: string
   kind: CardKind
   /** id del ítem de contenido del que procede (vocab, paradigma, frase). */
   sourceId: string
@@ -127,6 +154,7 @@ export type Grade = 1 | 2 | 3 | 4
 export interface CardProgress {
   cardId: string
   moduleId: string
+  sectionId: string
   kind: CardKind
   state: CardState
   /** Timestamp (ms) del próximo repaso. */
@@ -148,6 +176,7 @@ export interface ReviewLog {
   id?: number
   cardId: string
   moduleId: string
+  sectionId: string
   kind: CardKind
   mode: ExerciseMode
   grade: Grade
@@ -166,7 +195,7 @@ export interface Settings {
   dailyGoal: number
   /** Exigir acentos y espíritus en las respuestas escritas. */
   strictDiacritics: boolean
-  /** % de dominio del módulo necesario para desbloquear el siguiente. */
+  /** % de dominio de una sección necesario para abrir la siguiente. */
   unlockThreshold: number
   /** Mostrar el teclado griego en pantalla. */
   showKeyboard: boolean

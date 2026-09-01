@@ -32,6 +32,7 @@ export function newProgress(card: Card, now = Date.now()): CardProgress {
   return {
     cardId: card.id,
     moduleId: card.moduleId,
+    sectionId: card.sectionId,
     kind: card.kind,
     state: 'nueva',
     due: now,

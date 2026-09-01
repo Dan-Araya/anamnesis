@@ -7,7 +7,11 @@ import type { CardProgress, DailyStat, ReviewLog, Settings } from '@/types'
  */
 
 const DB_NAME = 'griego-antiguo'
-const DB_VERSION = 1
+/**
+ * v2: el contenido pasó a organizarse en secciones y los identificadores de
+ * tarjeta cambiaron, así que el progreso de la v1 ya no apunta a nada.
+ */
+const DB_VERSION = 2
 
 export const DEFAULT_SETTINGS: Settings = {
   newPerDay: 10,
@@ -43,20 +47,30 @@ let dbPromise: Promise<IDBPDatabase<Schema>> | null = null
 
 function db(): Promise<IDBPDatabase<Schema>> {
   dbPromise ??= openDB<Schema>(DB_NAME, DB_VERSION, {
-    upgrade(database) {
-      const progress = database.createObjectStore('progress', { keyPath: 'cardId' })
-      progress.createIndex('due', 'due')
-      progress.createIndex('moduleId', 'moduleId')
+    upgrade(database, oldVersion, _newVersion, tx) {
+      if (oldVersion < 1) {
+        const progress = database.createObjectStore('progress', { keyPath: 'cardId' })
+        progress.createIndex('due', 'due')
+        progress.createIndex('moduleId', 'moduleId')
 
-      const reviews = database.createObjectStore('reviews', {
-        keyPath: 'id',
-        autoIncrement: true,
-      })
-      reviews.createIndex('ts', 'ts')
-      reviews.createIndex('cardId', 'cardId')
+        const reviews = database.createObjectStore('reviews', {
+          keyPath: 'id',
+          autoIncrement: true,
+        })
+        reviews.createIndex('ts', 'ts')
+        reviews.createIndex('cardId', 'cardId')
 
-      database.createObjectStore('daily', { keyPath: 'date' })
-      database.createObjectStore('meta')
+        database.createObjectStore('daily', { keyPath: 'date' })
+        database.createObjectStore('meta')
+      }
+
+      if (oldVersion === 1) {
+        // Las tarjetas de la v1 apuntaban a contenido que ya no existe. Se
+        // descartan el progreso y el historial; los ajustes se conservan.
+        tx.objectStore('progress').clear()
+        tx.objectStore('reviews').clear()
+        tx.objectStore('daily').clear()
+      }
     },
   })
   return dbPromise

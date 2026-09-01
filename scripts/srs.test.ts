@@ -6,6 +6,7 @@ import { SRS, isDue, mastery, newProgress, schedule } from '../src/lib/srs'
 const card: Card = {
   id: 'v:test:rec',
   moduleId: 'module-01',
+  sectionId: 'm01-s01',
   kind: 'vocab-reconocer',
   sourceId: 'test',
 }

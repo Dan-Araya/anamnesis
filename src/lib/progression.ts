@@ -3,18 +3,20 @@ import type {
   CardProgress,
   ExerciseMode,
   ModuleContent,
+  Section,
   Settings,
 } from '@/types'
 import { isDue, mastery, newProgress } from '@/lib/srs'
 
 /**
- * Reglas de progresión y armado de la cola diaria.
+ * Reglas del camino: qué secciones están abiertas y qué entra en cada sesión.
  *
- * Este archivo no importa el contenido: recibe los módulos ya resueltos. Así
+ * Este archivo no importa el contenido: recibe las secciones ya resueltas. Así
  * las reglas se pueden probar sin arrastrar el cargador de JSON.
  */
 
-export interface ModuleEntry {
+export interface SectionEntry {
+  section: Section
   module: ModuleContent
   cards: Card[]
 }
@@ -27,11 +29,14 @@ export interface SessionItem {
   isNew: boolean
 }
 
-export interface ModuleStatus {
+export interface SectionStatus {
+  section: Section
   module: ModuleContent
   unlocked: boolean
-  /** Nulo cuando el módulo aún no tiene contenido. */
+  /** Nulo cuando la sección aún no tiene contenido. */
   mastery: number | null
+  /** Ha alcanzado el umbral: el nodo se pinta como superado. */
+  completed: boolean
   total: number
   started: number
   due: number
@@ -39,8 +44,10 @@ export interface ModuleStatus {
 }
 
 export interface BuildOptions {
-  /** Practicar solo este módulo (desde el mapa de módulos). */
-  moduleId?: string
+  /** Practicar solo esta sección (al pulsar su nodo en el camino). */
+  sectionId?: string
+  /** No introducir material nuevo: solo repasar lo ya visto. */
+  onlyReviews?: boolean
   /** Ignorar el objetivo diario y los límites de tarjetas nuevas. */
   unlimited?: boolean
   /** Tarjetas nuevas ya introducidas hoy. */
@@ -48,24 +55,24 @@ export interface BuildOptions {
 }
 
 // ---------------------------------------------------------------------------
-// Estado y desbloqueo de módulos
+// Estado y desbloqueo
 // ---------------------------------------------------------------------------
 
 /**
- * Progresión lineal: el primer módulo siempre está abierto y cada uno se abre
- * cuando el anterior alcanza el umbral de dominio. Un módulo todavía sin
- * contenido no bloquea al siguiente.
+ * El camino es lineal y atraviesa los módulos: la primera sección siempre está
+ * abierta y cada una se abre cuando la anterior alcanza el umbral de dominio.
+ * Una sección todavía sin contenido no bloquea a la siguiente.
  */
 export function computeStatuses(
-  entries: ModuleEntry[],
+  entries: SectionEntry[],
   progress: Map<string, CardProgress>,
   settings: Settings,
   now = Date.now(),
-): ModuleStatus[] {
-  const result: ModuleStatus[] = []
+): SectionStatus[] {
+  const result: SectionStatus[] = []
   let previousCleared = true
 
-  for (const { module, cards } of entries) {
+  for (const { section, module, cards } of entries) {
     let sum = 0
     let started = 0
     let due = 0
@@ -86,27 +93,30 @@ export function computeStatuses(
     // circular entre `unlocked` y la asignación del final del bucle.
     const unlocked: boolean = previousCleared
     const score = cards.length === 0 ? null : sum / cards.length
+    const cleared = score === null || score >= settings.unlockThreshold
 
     result.push({
+      section,
       module,
       unlocked,
       mastery: score,
+      completed: unlocked && cleared && cards.length > 0,
       total: cards.length,
       started,
       due,
       fresh,
     })
 
-    previousCleared = unlocked && (score === null || score >= settings.unlockThreshold)
+    previousCleared = unlocked && cleared
   }
 
   return result
 }
 
-/** Módulo abierto más avanzado: el que la pantalla de inicio destaca. */
-export function currentStatus(statuses: ModuleStatus[]): ModuleStatus | undefined {
+/** El nodo en el que está el usuario: el primero abierto sin terminar. */
+export function currentStatus(statuses: SectionStatus[]): SectionStatus | undefined {
   const open = statuses.filter((s) => s.unlocked && s.total > 0)
-  return open.find((s) => s.fresh > 0 || s.due > 0) ?? open.at(-1)
+  return open.find((s) => !s.completed) ?? open.at(-1)
 }
 
 // ---------------------------------------------------------------------------
@@ -154,8 +164,8 @@ function interleave(reviews: SessionItem[], fresh: SessionItem[]): SessionItem[]
 }
 
 export function selectQueue(
-  entries: ModuleEntry[],
-  statuses: ModuleStatus[],
+  entries: SectionEntry[],
+  statuses: SectionStatus[],
   progress: Map<string, CardProgress>,
   settings: Settings,
   options: BuildOptions = {},
@@ -163,15 +173,15 @@ export function selectQueue(
 ): SessionItem[] {
   const open = new Set(
     statuses
-      .filter((s) => s.unlocked && (!options.moduleId || s.module.id === options.moduleId))
-      .map((s) => s.module.id),
+      .filter((s) => s.unlocked && (!options.sectionId || s.section.id === options.sectionId))
+      .map((s) => s.section.id),
   )
 
   const reviews: SessionItem[] = []
   const fresh: Card[] = []
 
-  for (const { module, cards } of entries) {
-    if (!open.has(module.id)) continue
+  for (const { section, cards } of entries) {
+    if (!open.has(section.id)) continue
     for (const card of cards) {
       const p = progress.get(card.id)
       if (!p) {
@@ -184,9 +194,12 @@ export function selectQueue(
 
   reviews.sort((a, b) => a.progress.due - b.progress.due)
 
-  const newBudget = options.unlimited
-    ? fresh.length
-    : Math.max(0, settings.newPerDay - (options.newToday ?? 0))
+  // El repaso global no introduce material nuevo: eso es cosa del camino.
+  const newBudget = options.onlyReviews
+    ? 0
+    : options.unlimited
+      ? fresh.length
+      : Math.max(0, settings.newPerDay - (options.newToday ?? 0))
 
   const freshItems: SessionItem[] = fresh.slice(0, newBudget).map((card) => {
     const p = newProgress(card, now)

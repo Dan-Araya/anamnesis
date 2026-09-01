@@ -1,46 +1,47 @@
 import type { CardProgress, Settings, VocabEntry } from '@/types'
-import { allVocab, cardsByModule, modules } from '@/content'
+import { allVocab, cardsBySection, getNode, path } from '@/content'
 import {
   computeStatuses,
   currentStatus,
   selectQueue,
   shuffle,
   type BuildOptions,
-  type ModuleEntry,
-  type ModuleStatus,
+  type SectionEntry,
+  type SectionStatus,
   type SessionItem,
 } from '@/lib/progression'
 
 /**
- * Puente entre el contenido cargado desde los JSON y las reglas de
- * progresión, que viven en `progression.ts` y no conocen el contenido.
+ * Puente entre el contenido cargado desde los JSON y las reglas del camino,
+ * que viven en `progression.ts` y no conocen el contenido.
  */
 
-export type { BuildOptions, ModuleStatus, SessionItem }
+export type { BuildOptions, SectionStatus, SessionItem }
 export { pickMode } from '@/lib/progression'
 export { shuffle }
 
-const entries: ModuleEntry[] = modules.map((module) => ({
+const entries: SectionEntry[] = path.map(({ section, module }) => ({
+  section,
   module,
-  cards: cardsByModule.get(module.id) ?? [],
+  cards: cardsBySection.get(section.id) ?? [],
 }))
 
-export function moduleStatuses(
+export function sectionStatuses(
   progress: Map<string, CardProgress>,
   settings: Settings,
   now = Date.now(),
-): ModuleStatus[] {
+): SectionStatus[] {
   return computeStatuses(entries, progress, settings, now)
 }
 
-export function currentModule(statuses: ModuleStatus[]): ModuleStatus | undefined {
+export function currentSection(statuses: SectionStatus[]): SectionStatus | undefined {
   return currentStatus(statuses)
 }
 
 export function buildSession(
   progress: Map<string, CardProgress>,
   settings: Settings,
-  statuses: ModuleStatus[],
+  statuses: SectionStatus[],
   options: BuildOptions = {},
   now = Date.now(),
 ): SessionItem[] {
@@ -52,14 +53,20 @@ export function buildSession(
 // ---------------------------------------------------------------------------
 
 /**
- * Elige alternativas plausibles: primero del mismo módulo y categoría
+ * Elige alternativas plausibles: primero de la misma sección y categoría
  * gramatical, y se va abriendo la búsqueda si no hay suficientes.
  */
-export function distractors(target: VocabEntry, moduleId: string, count = 3): VocabEntry[] {
-  const module = modules.find((m) => m.id === moduleId)
+export function distractors(target: VocabEntry, sectionId: string, count = 3): VocabEntry[] {
+  const node = getNode(sectionId)
+  const local = node?.section.vocabulary ?? []
+  const sameModule = node
+    ? node.module.sections.flatMap((s) => s.vocabulary)
+    : []
+
   const pools = [
-    (module?.vocabulary ?? []).filter((v) => v.pos === target.pos),
-    module?.vocabulary ?? [],
+    local.filter((v) => v.pos === target.pos),
+    local,
+    sameModule.filter((v) => v.pos === target.pos),
     allVocab.filter((v) => v.pos === target.pos),
     allVocab,
   ]

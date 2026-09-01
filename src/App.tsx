@@ -1,30 +1,30 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '@/store'
-import HomeScreen from '@/screens/HomeScreen'
+import PathScreen from '@/screens/PathScreen'
 import SessionScreen from '@/screens/SessionScreen'
-import ModulesScreen from '@/screens/ModulesScreen'
-import ModuleDetailScreen from '@/screens/ModuleDetailScreen'
+import SectionScreen from '@/screens/SectionScreen'
+import CardsScreen from '@/screens/CardsScreen'
 import StatsScreen from '@/screens/StatsScreen'
 import SettingsScreen from '@/screens/SettingsScreen'
 
 type Route =
-  | { name: 'inicio' }
-  | { name: 'sesion'; moduleId?: string; unlimited?: boolean }
-  | { name: 'modulos' }
-  | { name: 'modulo'; id: string }
+  | { name: 'camino' }
+  | { name: 'sesion'; sectionId?: string; onlyReviews?: boolean }
+  | { name: 'seccion'; id: string }
+  | { name: 'tarjetas' }
   | { name: 'progreso' }
   | { name: 'ajustes' }
 
 const TABS = [
-  { name: 'inicio', icon: '🏛', label: 'Inicio' },
-  { name: 'modulos', icon: '📚', label: 'Módulos' },
+  { name: 'camino', icon: '🛤', label: 'Camino' },
+  { name: 'tarjetas', icon: '🃏', label: 'Tarjetas' },
   { name: 'progreso', icon: '📈', label: 'Progreso' },
   { name: 'ajustes', icon: '⚙', label: 'Ajustes' },
 ] as const
 
 export default function App() {
   const { ready, settings } = useStore()
-  const [route, setRoute] = useState<Route>({ name: 'inicio' })
+  const [route, setRoute] = useState<Route>({ name: 'camino' })
 
   useEffect(() => {
     document.documentElement.dataset.theme = settings.theme
@@ -46,11 +46,12 @@ export default function App() {
     return (
       <div className="app">
         <SessionScreen
-          moduleId={route.moduleId}
-          unlimited={route.unlimited}
+          sectionId={route.sectionId}
+          onlyReviews={route.onlyReviews}
           onExit={() =>
-            setRoute(route.moduleId ? { name: 'modulo', id: route.moduleId } : { name: 'inicio' })
+            setRoute(route.onlyReviews ? { name: 'tarjetas' } : { name: 'camino' })
           }
+          onOpenMaterial={(id) => setRoute({ name: 'seccion', id })}
         />
       </div>
     )
@@ -58,19 +59,20 @@ export default function App() {
 
   return (
     <div className="app">
-      {route.name === 'inicio' && (
-        <HomeScreen
-          onPractice={({ unlimited }) => setRoute({ name: 'sesion', unlimited })}
+      {route.name === 'camino' && (
+        <PathScreen onPractice={(sectionId) => setRoute({ name: 'sesion', sectionId })} />
+      )}
+      {route.name === 'seccion' && (
+        <SectionScreen
+          sectionId={route.id}
+          onBack={() => setRoute({ name: 'camino' })}
+          onPractice={(sectionId) => setRoute({ name: 'sesion', sectionId })}
         />
       )}
-      {route.name === 'modulos' && (
-        <ModulesScreen onOpen={(id) => setRoute({ name: 'modulo', id })} />
-      )}
-      {route.name === 'modulo' && (
-        <ModuleDetailScreen
-          moduleId={route.id}
-          onBack={() => setRoute({ name: 'modulos' })}
-          onPractice={(moduleId) => setRoute({ name: 'sesion', moduleId })}
+      {route.name === 'tarjetas' && (
+        <CardsScreen
+          onReview={() => setRoute({ name: 'sesion', onlyReviews: true })}
+          onGoToPath={() => setRoute({ name: 'camino' })}
         />
       )}
       {route.name === 'progreso' && <StatsScreen />}
@@ -79,7 +81,7 @@ export default function App() {
       <nav className="nav">
         {TABS.map((tab) => {
           const active =
-            route.name === tab.name || (tab.name === 'modulos' && route.name === 'modulo')
+            route.name === tab.name || (tab.name === 'camino' && route.name === 'seccion')
           return (
             <button
               key={tab.name}

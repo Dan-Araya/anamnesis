@@ -1,45 +1,47 @@
-import { getModule, isEmpty } from '@/content'
-import { useStore } from '@/store'
+import { getNode, isEmpty, moduleLabel, sectionLabel } from '@/content'
 import ParadigmTable from '@/components/ParadigmTable'
 
-export default function ModuleDetailScreen({
-  moduleId,
+/**
+ * El material de una sección, para consultarlo fuera de la práctica. Se llega
+ * desde el final de una sesión: el camino en sí entra directo a practicar.
+ */
+export default function SectionScreen({
+  sectionId,
   onBack,
   onPractice,
 }: {
-  moduleId: string
+  sectionId: string
   onBack: () => void
-  onPractice: (moduleId: string) => void
+  onPractice: (sectionId: string) => void
 }) {
-  const { statuses } = useStore()
-  const module = getModule(moduleId)
-  const status = statuses.find((s) => s.module.id === moduleId)
+  const node = getNode(sectionId)
 
-  if (!module) {
+  if (!node) {
     return (
       <div className="screen">
-        <p className="vacio">No se encuentra el módulo.</p>
+        <p className="vacio">No se encuentra la sección.</p>
       </div>
     )
   }
 
+  const { section, module } = node
+
   return (
     <div className="screen">
       <button type="button" className="btn btn--ghost" onClick={onBack}>
-        ← Módulos
+        ← Volver
       </button>
 
       <div className="modulo__num" style={{ marginTop: 12 }}>
-        Módulo {module.number}
+        {moduleLabel(module)}
       </div>
       <h1 className="screen__title" style={{ marginTop: 2 }}>
-        {module.title}
+        {sectionLabel(section)}
       </h1>
-      {module.summary && <p className="muted small">{module.summary}</p>}
 
-      {isEmpty(module) ? (
+      {isEmpty(section) ? (
         <div className="card">
-          <strong>Módulo vacío</strong>
+          <strong>Sección vacía</strong>
           <p className="muted small">
             Añade el contenido en <code>src/content/modules/{module.id}.json</code>.
           </p>
@@ -49,27 +51,27 @@ export default function ModuleDetailScreen({
           type="button"
           className="btn btn--primary btn--wide"
           style={{ marginBottom: 20 }}
-          onClick={() => onPractice(moduleId)}
+          onClick={() => onPractice(section.id)}
         >
-          Practicar este módulo
-          {status && status.due > 0 ? ` · ${status.due} pendientes` : ''}
+          Practicar esta sección
         </button>
       )}
 
-      {module.vocabulary.length > 0 && (
+      {section.vocabulary.length > 0 && (
         <section>
           <h2 className="screen__title" style={{ fontSize: '1.1rem' }}>
             Vocabulario
           </h2>
           <div className="card">
             <ul className="lista">
-              {module.vocabulary.map((v) => (
+              {section.vocabulary.map((v) => (
                 <li key={v.id}>
                   <span>
                     <span className="griego" style={{ fontSize: '1.15rem' }}>
                       {v.greek}
                     </span>
                     {v.info && <span className="muted small"> {v.info}</span>}
+                    {v.notes && <div className="muted small">{v.notes}</div>}
                   </span>
                   <span className="muted" style={{ textAlign: 'right' }}>
                     {v.es.join(', ')}
@@ -81,7 +83,7 @@ export default function ModuleDetailScreen({
         </section>
       )}
 
-      {module.paradigms.map((p) => (
+      {section.paradigms.map((p) => (
         <section key={p.id}>
           <h2 className="screen__title" style={{ fontSize: '1.1rem', marginTop: 24 }}>
             {p.title}
@@ -103,13 +105,13 @@ export default function ModuleDetailScreen({
         </section>
       ))}
 
-      {module.sentences.length > 0 && (
+      {section.sentences.length > 0 && (
         <section>
           <h2 className="screen__title" style={{ fontSize: '1.1rem', marginTop: 24 }}>
             Frases
           </h2>
           <div className="card">
-            {module.sentences.map((s) => (
+            {section.sentences.map((s) => (
               <div key={s.id} style={{ marginBottom: 12 }}>
                 <div className="griego" style={{ fontSize: '1.1rem' }}>
                   {s.greek}
@@ -121,12 +123,12 @@ export default function ModuleDetailScreen({
         </section>
       )}
 
-      {module.grammar.length > 0 && (
+      {section.grammar.length > 0 && (
         <section>
           <h2 className="screen__title" style={{ fontSize: '1.1rem', marginTop: 24 }}>
             Gramática
           </h2>
-          {module.grammar.map((g) => (
+          {section.grammar.map((g) => (
             <div className="card" key={g.id}>
               <strong>{g.title}</strong>
               <p className="small" style={{ marginBottom: 0 }}>
