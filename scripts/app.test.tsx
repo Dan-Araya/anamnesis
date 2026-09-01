@@ -153,3 +153,52 @@ test('el acento pulsado antes de la vocal espera y cae donde debe', async () => 
   await user.click(screen.getByRole('button', { name: 'Comprobar' }))
   await screen.findByText('Correcto')
 })
+
+/** Monta el ejercicio de escritura de δέ con el teclado en pantalla activo. */
+function montarEscritura() {
+  const card = {
+    id: 'v:m01-s01-de:pro',
+    moduleId: 'module-01',
+    sectionId: 'm01-s01',
+    capsuleId: 'm01-s01-c01',
+    kind: 'vocab-producir' as const,
+    sourceId: 'm01-s01-de',
+  }
+  render(
+    <TypeAnswer
+      item={{ card, progress: newProgress(card), mode: 'escribir', isNew: false }}
+      settings={{ ...DEFAULT_SETTINGS, showKeyboard: true }}
+      onGraded={() => {}}
+    />,
+  )
+  return screen.getByLabelText('Tu respuesta en griego') as HTMLInputElement
+}
+
+test('el campo admite el teclado del sistema aunque esté el de pantalla', async () => {
+  const user = userEvent.setup()
+  const input = montarEscritura()
+
+  // Editable: al tocarlo, Android abre su teclado.
+  assert.equal(input.hasAttribute('readonly'), false)
+
+  await user.click(input)
+  await user.type(input, 'δε')
+  assert.equal(input.value, 'δε')
+
+  // Y el diacrítico se remata con el teclado en pantalla.
+  await user.click(screen.getByRole('button', { name: 'Agudo' }))
+  assert.equal(input.value, 'δέ')
+})
+
+test('las teclas escriben donde está el cursor, no siempre al final', async () => {
+  const user = userEvent.setup()
+  const input = montarEscritura()
+
+  await user.click(input)
+  await user.type(input, 'δε')
+  // El cursor se lleva a mitad de palabra.
+  input.setSelectionRange(1, 1)
+
+  await user.click(screen.getByRole('button', { name: 'ι' }))
+  assert.equal(input.value, 'διε')
+})

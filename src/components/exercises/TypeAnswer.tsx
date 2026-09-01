@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Grade, Settings } from '@/types'
 import { cellForms, cellLabel, getParadigm, getVocab } from '@/content'
 import { isGreekCorrect, matchGreek, toNFC, type MatchLevel } from '@/lib/greek'
@@ -20,6 +20,7 @@ export default function TypeAnswer({
 }) {
   const [value, setValue] = useState('')
   const [level, setLevel] = useState<MatchLevel | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const question = buildQuestion(item)
   if (!question) return <p className="vacio">Falta el contenido de esta tarjeta.</p>
@@ -54,12 +55,15 @@ export default function TypeAnswer({
         }}
       >
         <input
+          ref={inputRef}
           className="answer answer--griego griego"
           value={value}
           onChange={(e) => setValue(toNFC(e.target.value))}
-          // Con el teclado en pantalla activo evitamos que se abra el del
-          // sistema, que no trae politónico y taparía media pantalla.
-          readOnly={settings.showKeyboard || level !== null}
+          // El campo queda editable aunque esté el teclado en pantalla: al
+          // tocarlo se abre el del sistema, y las dos formas de escribir
+          // conviven. Solo se bloquea una vez comprobada la respuesta.
+          readOnly={level !== null}
+          // Sin foco automático para que el teclado del sistema no salte solo.
           autoFocus={!settings.showKeyboard}
           autoCapitalize="off"
           autoCorrect="off"
@@ -70,7 +74,7 @@ export default function TypeAnswer({
       </form>
 
       {settings.showKeyboard && level === null && (
-        <GreekKeyboard value={value} onChange={setValue} />
+        <GreekKeyboard value={value} onChange={setValue} inputRef={inputRef} />
       )}
 
       {level !== null && (

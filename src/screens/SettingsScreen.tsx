@@ -119,7 +119,7 @@ export default function SettingsScreen() {
         />
         <Interruptor
           label="Teclado griego en pantalla"
-          hint="Desactívalo si tienes un teclado politónico instalado en el móvil."
+          hint="Convive con el del sistema: toca el campo para escribir con tu teclado. Desactívalo si ya tienes uno politónico."
           checked={settings.showKeyboard}
           onChange={(v) => void updateSettings({ showKeyboard: v })}
         />

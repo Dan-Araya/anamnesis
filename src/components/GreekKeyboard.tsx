@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import type { DiacriticName } from '@/lib/greek'
 import {
   DIACRITIC_KEYS,
@@ -18,27 +18,62 @@ import {
  * la marca no cabe en lo último escrito —o no hay nada— queda en espera y cae
  * sobre la siguiente vocal que la admita. Así δ, ´, ε produce δέ igual que
  * δ, ε, ´, y nunca se acaba con un acento sobre una consonante.
+ *
+ * Convive con el teclado del sistema: el campo sigue siendo editable, y estas
+ * teclas escriben en la posición del cursor sin robarle el foco, de modo que
+ * se puede alternar entre uno y otro a mitad de palabra.
  */
 export default function GreekKeyboard({
   value,
   onChange,
+  inputRef,
 }: {
   value: string
   onChange: (next: string) => void
+  inputRef?: RefObject<HTMLInputElement | null>
 }) {
   const [pendientes, setPendientes] = useState<DiacriticName[]>([])
+  const cursorDeseado = useRef<number | null>(null)
+
+  // Tras repintar con el valor nuevo, devuelve el cursor a donde tocaba.
+  useLayoutEffect(() => {
+    const el = inputRef?.current
+    const pos = cursorDeseado.current
+    if (el && pos !== null && document.activeElement === el) {
+      el.setSelectionRange(pos, pos)
+    }
+    cursorDeseado.current = null
+  })
+
+  /** Dónde escribir: el cursor si el campo está enfocado, si no al final. */
+  const posicion = (): number => {
+    const el = inputRef?.current
+    if (!el || document.activeElement !== el || el.selectionStart === null) {
+      return value.length
+    }
+    return el.selectionStart
+  }
+
+  /** Aplica una transformación al texto que queda a la izquierda del cursor. */
+  const escribir = (transformar: (antes: string) => string) => {
+    const corte = posicion()
+    const antes = transformar(value.slice(0, corte))
+    cursorDeseado.current = antes.length
+    onChange(antes + value.slice(corte))
+    return antes
+  }
 
   const pulsarLetra = (letra: string) => {
-    let siguiente = value + letra
     const quedan: DiacriticName[] = []
-
-    for (const d of pendientes) {
-      if (canApplyDiacritic(siguiente, d)) siguiente = applyDiacritic(siguiente, d)
-      else quedan.push(d)
-    }
-
+    escribir((antes) => {
+      let texto = antes + letra
+      for (const d of pendientes) {
+        if (canApplyDiacritic(texto, d)) texto = applyDiacritic(texto, d)
+        else quedan.push(d)
+      }
+      return texto
+    })
     setPendientes(quedan)
-    onChange(siguiente)
   }
 
   const pulsarDiacritico = (d: DiacriticName) => {
@@ -46,13 +81,20 @@ export default function GreekKeyboard({
       setPendientes(pendientes.filter((p) => p !== d))
       return
     }
-    if (canApplyDiacritic(value, d)) {
-      onChange(applyDiacritic(value, d))
+    const corte = posicion()
+    if (canApplyDiacritic(value.slice(0, corte), d)) {
+      escribir((antes) => applyDiacritic(antes, d))
       return
     }
     // Todavía no hay dónde ponerlo: espera a la próxima vocal.
     setPendientes([...pendientes, d])
   }
+
+  /**
+   * Pulsar una tecla no debe mover el foco: si el campo estaba enfocado,
+   * conserva su cursor; y si no lo estaba, no abre el teclado del sistema.
+   */
+  const noRobarFoco = (e: React.PointerEvent) => e.preventDefault()
 
   return (
     <div className="teclado">
@@ -63,6 +105,7 @@ export default function GreekKeyboard({
               key={letter}
               type="button"
               className="tecla griego"
+              onPointerDown={noRobarFoco}
               onClick={() => pulsarLetra(letter)}
             >
               {letter}
@@ -82,6 +125,7 @@ export default function GreekKeyboard({
             title={d.hint}
             aria-label={d.hint}
             aria-pressed={pendientes.includes(d.name)}
+            onPointerDown={noRobarFoco}
             onClick={() => pulsarDiacritico(d.name)}
           >
             {d.label}
@@ -94,9 +138,10 @@ export default function GreekKeyboard({
           type="button"
           className="tecla tecla--ancha"
           aria-label="Espacio"
+          onPointerDown={noRobarFoco}
           onClick={() => {
             setPendientes([])
-            onChange(value + ' ')
+            escribir((antes) => antes + ' ')
           }}
         >
           ␣
@@ -105,10 +150,11 @@ export default function GreekKeyboard({
           type="button"
           className="tecla tecla--ancha"
           aria-label="Borrar"
+          onPointerDown={noRobarFoco}
           onClick={() => {
             // Si hay marcas en espera, lo primero que se borra son ellas.
             if (pendientes.length > 0) setPendientes(pendientes.slice(0, -1))
-            else onChange(backspace(value))
+            else escribir(backspace)
           }}
         >
           ⌫

@@ -167,9 +167,16 @@ que se teclee `τε … καί` letra a letra.
 
 El formato de la pregunta se endurece según se asienta la tarjeta: primero
 opción múltiple, después escribir la forma de memoria o autoevaluarse con una
-flashcard. Las respuestas en griego se escriben con el teclado politónico en
-pantalla (pulsa la letra y luego los diacríticos; pulsar el mismo diacrítico
-dos veces lo retira).
+flashcard.
+
+Para las respuestas en griego hay un teclado politónico en pantalla: pulsa la
+letra y luego los diacríticos, o al revés —el acento delante, como en el
+teclado español—, que la marca espera a la siguiente vocal. Pulsar el mismo
+diacrítico dos veces lo retira, y ninguno cae donde el griego no lo admite.
+
+El campo sigue siendo editable, así que tocarlo abre el teclado del sistema y
+se puede alternar entre los dos a mitad de palabra: las teclas de pantalla
+escriben en la posición del cursor sin robar el foco.
 
 La repetición espaciada es SM-2 con pasos de aprendizaje, el mismo esquema de
 Anki: notas de 1 a 4 e intervalos crecientes.
