@@ -76,6 +76,31 @@ function checkCapsule(capsule: Capsule, where: string) {
   }
 
   for (const g of capsule.grammar ?? []) uniqueId(g.id, `${where} · gramática`)
+
+  for (const d of capsule.drills ?? []) {
+    uniqueId(d.id, `${where} · drills`)
+    if (!d.axes?.length) {
+      errors.push(`${where}: el drill «${d.id}» no declara ejes`)
+      continue
+    }
+    const valid = validKeys(d.axes)
+    for (const key of Object.keys(d.cells ?? {})) {
+      if (!valid.has(key)) {
+        errors.push(`${where}: «${d.id}» tiene la celda «${key}», que no casa con los ejes`)
+      }
+    }
+    // A diferencia de un paradigma normal, un drill se practica entero: si le
+    // falta una celda, el ejercicio de huecos puede tocar tapar algo que no
+    // tiene respuesta.
+    const missing = [...valid].filter((k) => !(k in (d.cells ?? {})))
+    if (missing.length) {
+      errors.push(
+        `${where}: el drill «${d.id}» debe llegar completo, le faltan ${missing.length} celdas (${missing
+          .slice(0, 4)
+          .join(', ')}${missing.length > 4 ? '…' : ''})`,
+      )
+    }
+  }
 }
 
 /** Comprueba que una lista numerada no repita números. */

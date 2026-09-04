@@ -687,6 +687,44 @@ textarea {
   font-size: 0.8rem;
 }
 
+.tabla__celda {
+  min-width: 64px;
+}
+
+.tabla__input {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  outline: none;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.tabla__input:focus {
+  border-color: var(--accent);
+}
+
+.tabla__input--ok {
+  border-color: var(--ok);
+  background: var(--ok-dim);
+}
+
+.tabla__input--casi {
+  border-color: var(--accent);
+}
+
+.tabla__input--mal {
+  border-color: var(--bad);
+  background: var(--bad-dim);
+}
+
+.tabla__correccion {
+  margin-top: 2px;
+  text-align: center;
+}
+
 .lista {
   list-style: none;
   margin: 0;

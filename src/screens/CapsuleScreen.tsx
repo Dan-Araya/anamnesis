@@ -105,6 +105,26 @@ export default function CapsuleScreen({
         </section>
       ))}
 
+      {capsule.drills.map((d) => (
+        <section key={d.id}>
+          <h2 className="screen__title" style={{ fontSize: '1.1rem', marginTop: 24 }}>
+            {d.title} · repaso
+          </h2>
+          <div className="card">
+            <div className="row">
+              <span className="griego" style={{ fontSize: '1.1rem' }}>
+                {d.lemma}
+              </span>
+              {d.gloss && <span className="muted small">{d.gloss}</span>}
+            </div>
+            <ParadigmTable paradigm={d} />
+            <p className="muted small" style={{ marginBottom: 0 }}>
+              Se practica entera, tapando celdas al azar.
+            </p>
+          </div>
+        </section>
+      ))}
+
       {capsule.sentences.length > 0 && (
         <section>
           <h2 className="screen__title" style={{ fontSize: '1.1rem', marginTop: 24 }}>

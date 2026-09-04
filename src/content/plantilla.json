@@ -72,7 +72,47 @@
               "hint": "Opcional."
             }
           ],
-          "grammar": [{ "id": "m0N-s01-nota", "title": "Título", "body": "Explicación." }]
+          "grammar": [{ "id": "m0N-s01-nota", "title": "Título", "body": "Explicación." }],
+          "drills": [
+            {
+              "_comentario": [
+                "Tabla de repaso consolidado: a diferencia de `paradigms`, esto no genera",
+                "una tarjeta por celda sino una sola tarjeta que practica la tabla entera,",
+                "tapando celdas al azar en cada intento. Por eso debe llegar COMPLETA: ",
+                "`check-content` la rechaza si le falta alguna celda.",
+                "Encaja bien para juntar en una cápsula posterior varias tablas que se",
+                "enseñaron por separado (p. ej. el artículo, una vez vistos los cuatro casos)."
+              ],
+              "id": "m0N-s01-drill",
+              "title": "Nombre de la tabla",
+              "lemma": "λόγος, ὁ",
+              "gloss": "la palabra",
+              "axes": [
+                {
+                  "id": "numero",
+                  "label": "Número",
+                  "values": [
+                    { "id": "sg", "label": "Singular" },
+                    { "id": "pl", "label": "Plural" }
+                  ]
+                },
+                {
+                  "id": "caso",
+                  "label": "Caso",
+                  "values": [
+                    { "id": "nom", "label": "Nominativo" },
+                    { "id": "ac", "label": "Acusativo" }
+                  ]
+                }
+              ],
+              "cells": {
+                "sg|nom": "λόγος",
+                "sg|ac": "λόγον",
+                "pl|nom": "λόγοι",
+                "pl|ac": ["λόγους", "forma alternativa aceptada"]
+              }
+            }
+          ]
         }
       ]
     }

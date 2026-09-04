@@ -6,6 +6,7 @@ import MultipleChoice from '@/components/exercises/MultipleChoice'
 import Flashcard from '@/components/exercises/Flashcard'
 import TypeAnswer from '@/components/exercises/TypeAnswer'
 import Translate from '@/components/exercises/Translate'
+import TableDrill from '@/components/exercises/TableDrill'
 
 /** Cuántas veces como mucho puede reaparecer una tarjeta en la misma sesión. */
 const MAX_REPETICIONES = 4
@@ -123,6 +124,8 @@ function Ejercicio({
       return <Translate item={item} onGraded={onGraded} />
     case 'flashcard':
       return <Flashcard item={item} onGraded={onGraded} />
+    case 'huecos':
+      return <TableDrill item={item} settings={settings} onGraded={onGraded} />
   }
 }
 

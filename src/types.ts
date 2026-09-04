@@ -104,6 +104,13 @@ export interface Capsule {
   paradigms: Paradigm[]
   sentences: Sentence[]
   grammar: GrammarNote[]
+  /**
+   * Tablas completas para el repaso consolidado: a diferencia de `paradigms`
+   * (que reparte una tarjeta por celda), cada tabla aquí genera una única
+   * tarjeta que la practica entera, tapando celdas al azar en cada intento.
+   * Por eso deben llegar con todas las celdas rellenas.
+   */
+  drills: Paradigm[]
 }
 
 /** Un grupo de cápsulas dentro de un módulo. */
@@ -136,9 +143,11 @@ export type CardKind =
   | 'morfologia'
   /** Traducir una frase. */
   | 'traduccion'
+  /** Rellenar de memoria las celdas al azar de una tabla ya vista entera. */
+  | 'tabla'
 
 /** Cómo se le presenta al usuario una tarjeta en una sesión concreta. */
-export type ExerciseMode = 'opcion-multiple' | 'flashcard' | 'escribir' | 'traducir'
+export type ExerciseMode = 'opcion-multiple' | 'flashcard' | 'escribir' | 'traducir' | 'huecos'
 
 /** Tarjeta derivada del contenido. Se recalcula en cada arranque. */
 export interface Card {

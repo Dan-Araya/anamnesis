@@ -145,6 +145,8 @@ export function pickMode(card: Card, p: CardProgress): ExerciseMode {
       return p.state === 'nueva' ? 'flashcard' : 'escribir'
     case 'traduccion':
       return 'traducir'
+    case 'tabla':
+      return 'huecos'
   }
 }
 

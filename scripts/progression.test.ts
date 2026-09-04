@@ -42,6 +42,7 @@ function camino(...tamanos: number[]): CapsuleEntry[] {
       paradigms: [],
       sentences: [],
       grammar: [],
+      drills: [],
     }
     const cards: Card[] = Array.from({ length: n }, (_, j) => ({
       id: `${capsule.id}:c${j}`,
@@ -264,4 +265,9 @@ test('el formato de la pregunta se endurece según se asienta la tarjeta', () =>
   const morfologia: Card = { ...card, kind: 'morfologia', cellKey: 'sg|nom' }
   assert.equal(pickMode(morfologia, newProgress(morfologia, NOW)), 'flashcard')
   assert.equal(pickMode(morfologia, schedule(newProgress(morfologia, NOW), 3, NOW)), 'escribir')
+
+  // La tabla de repaso siempre se rellena entera, sin fase de reconocimiento.
+  const tabla: Card = { ...card, kind: 'tabla' }
+  assert.equal(pickMode(tabla, newProgress(tabla, NOW)), 'huecos')
+  assert.equal(pickMode(tabla, schedule(newProgress(tabla, NOW), 3, NOW)), 'huecos')
 })

@@ -57,7 +57,12 @@ export function getNode(capsuleId: string): PathNode | undefined {
 
 /** ¿Tiene la cápsula algo que practicar? */
 export function isEmpty(c: Capsule): boolean {
-  return c.vocabulary.length === 0 && c.paradigms.length === 0 && c.sentences.length === 0
+  return (
+    c.vocabulary.length === 0 &&
+    c.paradigms.length === 0 &&
+    c.sentences.length === 0 &&
+    c.drills.length === 0
+  )
 }
 
 export function capsuleLabel(c: Capsule): string {
@@ -140,6 +145,10 @@ function cardsForCapsule(node: PathNode): Card[] {
     cards.push({ ...base, id: `s:${s.id}`, kind: 'traduccion', sourceId: s.id })
   }
 
+  for (const d of node.capsule.drills) {
+    cards.push({ ...base, id: `d:${d.id}`, kind: 'tabla', sourceId: d.id })
+  }
+
   return cards
 }
 
@@ -159,11 +168,13 @@ export const allCards: Card[] = path.flatMap(
 const vocabById = new Map<string, VocabEntry>()
 const paradigmById = new Map<string, Paradigm>()
 const sentenceById = new Map<string, Sentence>()
+const drillById = new Map<string, Paradigm>()
 
 for (const { capsule } of path) {
   for (const v of capsule.vocabulary) vocabById.set(v.id, v)
   for (const p of capsule.paradigms) paradigmById.set(p.id, p)
   for (const s of capsule.sentences) sentenceById.set(s.id, s)
+  for (const d of capsule.drills) drillById.set(d.id, d)
 }
 
 export function getVocab(id: string): VocabEntry | undefined {
@@ -176,6 +187,11 @@ export function getParadigm(id: string): Paradigm | undefined {
 
 export function getSentence(id: string): Sentence | undefined {
   return sentenceById.get(id)
+}
+
+/** Tabla completa de un ejercicio de huecos (ver `Capsule.drills`). */
+export function getDrill(id: string): Paradigm | undefined {
+  return drillById.get(id)
 }
 
 /** Vocabulario de todo el contenido, para generar distractores. */
