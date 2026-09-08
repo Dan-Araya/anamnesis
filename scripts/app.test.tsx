@@ -6,7 +6,7 @@ import type { Grade, Settings } from '../src/types'
 import App from '../src/App'
 import { StoreProvider } from '../src/store'
 import { allCards, allVocab, getVocab, path } from '../src/content'
-import { DEFAULT_SETTINGS, loadProgress } from '../src/lib/db'
+import { DEFAULT_SETTINGS, exportBackup, loadProgress } from '../src/lib/db'
 import { newProgress } from '../src/lib/srs'
 import TypeAnswer from '../src/components/exercises/TypeAnswer'
 
@@ -52,6 +52,8 @@ test('pulsar el nodo entra directo a practicar y guarda el progreso', async () =
     const [saved] = [...progress.values()]
     assert.equal(saved!.state, 'aprendiendo')
     assert.equal(saved!.cardId.startsWith('v:m01-s01-'), true)
+    const backup = await exportBackup()
+    assert.match(backup.reviews[0]!.eventId, /^[0-9a-f-]{36}$/)
   })
 })
 

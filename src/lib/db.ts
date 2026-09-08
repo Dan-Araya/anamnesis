@@ -12,8 +12,10 @@ const DB_NAME = 'griego-antiguo'
  * tarjeta cambiaron, así que el progreso de la v1 ya no apunta a nada.
  * v3: el progreso deja de guardar a qué módulo pertenece cada tarjeta; ese
  * dato lo aporta el contenido. Los registros se conservan.
+ * v4: cada repaso recibe un eventId estable para poder sincronizarlo. Los
+ * registros anteriores se conservan y reciben un id derivado de su clave.
  */
-const DB_VERSION = 3
+const DB_VERSION = 4
 
 export const DEFAULT_SETTINGS: Settings = {
   newPerDay: 10,
@@ -85,6 +87,17 @@ function db(): Promise<IDBPDatabase<Schema>> {
         }
         if (store.indexNames.contains('moduleId')) store.deleteIndex('moduleId')
       }
+
+      if (oldVersion > 0 && oldVersion < 4) {
+        const reviews = tx.objectStore('reviews')
+        void reviews.openCursor().then(function migrate(cursor): Promise<unknown> | undefined {
+          if (!cursor) return undefined
+          if (!cursor.value.eventId) {
+            void cursor.update({ ...cursor.value, eventId: `legacy:${String(cursor.primaryKey)}` })
+          }
+          return cursor.continue().then(migrate)
+        })
+      }
     },
   })
   return dbPromise
@@ -118,6 +131,10 @@ export async function logReview(entry: ReviewLog): Promise<void> {
 
 export async function reviewsSince(ts: number): Promise<ReviewLog[]> {
   return (await db()).getAllFromIndex('reviews', 'ts', IDBKeyRange.lowerBound(ts))
+}
+
+export async function getAllReviews(): Promise<ReviewLog[]> {
+  return (await db()).getAll('reviews')
 }
 
 // ---------------------------------------------------------------------------
@@ -194,6 +211,15 @@ export async function saveSettings(settings: Settings): Promise<void> {
   await (await db()).put('meta', settings, 'settings')
 }
 
+export async function getDeviceId(): Promise<string> {
+  const database = await db()
+  const stored = await database.get('meta', 'deviceId')
+  if (typeof stored === 'string') return stored
+  const created = crypto.randomUUID()
+  await database.put('meta', created, 'deviceId')
+  return created
+}
+
 // ---------------------------------------------------------------------------
 // Copia de seguridad
 // ---------------------------------------------------------------------------
@@ -232,7 +258,12 @@ export async function importBackup(backup: Backup): Promise<void> {
     ...backup.progress.map((p) => tx.objectStore('progress').put(p)),
     ...backup.daily.map((d) => tx.objectStore('daily').put(d)),
     // Los ids del log se regeneran para no chocar con el autoincremento.
-    ...backup.reviews.map(({ id: _id, ...r }) => tx.objectStore('reviews').add(r as ReviewLog)),
+    ...backup.reviews.map(({ id: _id, ...r }) =>
+      tx.objectStore('reviews').add({
+        ...r,
+        eventId: r.eventId ?? crypto.randomUUID(),
+      } as ReviewLog),
+    ),
     tx.objectStore('meta').put(backup.settings, 'settings'),
     tx.done,
   ])

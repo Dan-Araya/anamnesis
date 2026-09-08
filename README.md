@@ -2,9 +2,10 @@
 
 _ἀνάμνησις, «recuerdo»._
 
-App de práctica diaria de griego antiguo para el móvil. PWA instalable, sin
-servidor ni cuentas: el contenido va en archivos JSON del repositorio y el
-progreso vive en el IndexedDB del dispositivo.
+App de práctica diaria de griego antiguo para el móvil. Funciona como PWA y
+como aplicación Android mediante Capacitor. El contenido va en archivos JSON
+del repositorio y el progreso se conserva primero en el dispositivo; una
+cuenta opcional permite guardarlo también en Supabase.
 
 ## Cómo está organizada
 
@@ -199,6 +200,37 @@ de ahí funciona sin conexión y se actualiza sola cuando vuelvas a publicar.
 El progreso no se sincroniza entre dispositivos. En **Ajustes** puedes exportar
 e importar un JSON con todo el historial: hazlo antes de cambiar de móvil o de
 limpiar los datos del navegador.
+
+### Android con Capacitor
+
+Genera los recursos web y actualiza el proyecto nativo:
+
+```bash
+npm run build:android
+```
+
+Para compilar un APK de desarrollo:
+
+```bash
+cd android
+ANDROID_HOME=/ruta/al/Android/Sdk ./gradlew assembleDebug
+```
+
+El APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`. Para abrir
+el proyecto en Android Studio usa `npm run open:android`.
+
+### Cuenta y respaldo remoto
+
+1. Crea un proyecto en Supabase y ejecuta `supabase/schema.sql` en el editor SQL.
+2. Copia `.env.example` a `.env.local` y añade la URL y la clave pública `anon`.
+3. En Supabase Auth, configura la URL pública de la aplicación entre las URLs
+   de redirección permitidas. Añade también
+   `cl.danaraya.anamnesis://auth/callback` para que los enlaces abran Android.
+
+Sin esas variables la aplicación permanece íntegramente local. Con ellas, en
+**Ajustes** aparece el acceso por enlace de correo y los controles para guardar
+o restaurar una copia privada. La exportación JSON sigue disponible como
+respaldo independiente.
 
 ## Estructura
 

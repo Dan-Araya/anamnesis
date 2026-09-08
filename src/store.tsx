@@ -91,6 +91,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       await saveProgress(next)
       await logReview({
+        eventId: crypto.randomUUID(),
         cardId: card.id,
         moduleId: card.moduleId,
         sectionId: card.sectionId,

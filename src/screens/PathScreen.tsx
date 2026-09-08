@@ -43,6 +43,13 @@ export default function PathScreen({
 
   return (
     <div className="screen camino">
+      <header className="app-heading">
+        <div>
+          <div className="app-heading__kicker">ἀνάμνησις</div>
+          <h1>Tu camino</h1>
+        </div>
+        <span className="app-heading__mark griego">α</span>
+      </header>
       {grupos.map((grupo) => (
         <section key={grupo.module.id}>
           <header className="camino__rotulo">

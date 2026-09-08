@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
 import { useStore } from '@/store'
+import { useAuth } from '@/auth'
+import { restoreCloudBackup, saveCloudBackup } from '@/lib/cloud'
 import { dayKey, exportBackup, importBackup, resetAll, type Backup } from '@/lib/db'
 
 export default function SettingsScreen() {
@@ -42,6 +44,8 @@ export default function SettingsScreen() {
   return (
     <div className="screen">
       <h1 className="screen__title">Ajustes</h1>
+
+      <AccountCard onRestored={refresh} />
 
       <div className="card">
         <div className="campo">
@@ -183,6 +187,121 @@ export default function SettingsScreen() {
           progreso.
         </p>
       </div>
+    </div>
+  )
+}
+
+function AccountCard({ onRestored }: { onRestored: () => Promise<void> }) {
+  const { configured, loading, user, sendMagicLink, signOut } = useAuth()
+  const [email, setEmail] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+
+  const action = async (work: () => Promise<void>) => {
+    setBusy(true)
+    setMessage(null)
+    try {
+      await work()
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'No se pudo completar la acción.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!configured) {
+    return (
+      <div className="card account-card">
+        <div className="eyebrow">Cuenta y respaldo</div>
+        <strong>Conecta Supabase para proteger tu progreso</strong>
+        <p className="muted small">
+          La práctica seguirá guardándose en este dispositivo. Añade las variables de
+          entorno para habilitar una copia privada en la nube.
+        </p>
+        <span className="status-pill">Modo local</span>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return <div className="card account-card muted">Comprobando tu cuenta…</div>
+  }
+
+  if (!user) {
+    return (
+      <div className="card account-card">
+        <div className="eyebrow">Cuenta y respaldo</div>
+        <strong>Protege tu progreso</strong>
+        <p className="muted small">Recibe un enlace de acceso. No necesitas contraseña.</p>
+        <label className="input-label" htmlFor="account-email">Correo electrónico</label>
+        <input
+          id="account-email"
+          className="text-input"
+          type="email"
+          autoComplete="email"
+          placeholder="nombre@correo.com"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
+        <button
+          type="button"
+          className="btn btn--primary btn--wide"
+          disabled={busy || !email.includes('@')}
+          onClick={() => void action(async () => {
+            await sendMagicLink(email.trim())
+            setMessage('Revisa tu correo para entrar en Anamnesis.')
+          })}
+        >
+          Enviarme un enlace
+        </button>
+        {message && <p className="small account-message">{message}</p>}
+      </div>
+    )
+  }
+
+  return (
+    <div className="card account-card">
+      <div className="account-heading">
+        <div>
+          <div className="eyebrow">Cuenta conectada</div>
+          <strong>{user.email}</strong>
+        </div>
+        <span className="status-pill status-pill--ok">Protegido</span>
+      </div>
+      <p className="muted small">
+        Tú decides cuándo guardar o restaurar. La copia local permanece disponible sin
+        conexión.
+      </p>
+      <div className="stack">
+        <button
+          type="button"
+          className="btn btn--primary btn--wide"
+          disabled={busy}
+          onClick={() => void action(async () => {
+            const date = await saveCloudBackup(user)
+            setMessage(`Copia guardada: ${new Date(date).toLocaleString()}.`)
+          })}
+        >
+          Guardar en la nube
+        </button>
+        <button
+          type="button"
+          className="btn btn--wide"
+          disabled={busy}
+          onClick={() => void action(async () => {
+            if (!confirm('Esto reemplazará el progreso de este dispositivo. ¿Seguir?')) return
+            const date = await restoreCloudBackup()
+            await onRestored()
+            setMessage(`Copia restaurada: ${new Date(date).toLocaleString()}.`)
+          })}
+        >
+          Restaurar desde la nube
+        </button>
+        <button type="button" className="btn btn--ghost btn--wide" disabled={busy} onClick={() => void action(signOut)}>
+          Cerrar sesión
+        </button>
+      </div>
+      {message && <p className="small account-message">{message}</p>}
     </div>
   )
 }

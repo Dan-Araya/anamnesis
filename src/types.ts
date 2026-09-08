@@ -196,6 +196,8 @@ export interface CardProgress {
 
 export interface ReviewLog {
   id?: number
+  /** Identificador global estable para sincronizar sin duplicar repasos. */
+  eventId: string
   cardId: string
   moduleId: string
   sectionId: string
