@@ -10,7 +10,7 @@ import { DEFAULT_SETTINGS, exportBackup, loadProgress } from '../src/lib/db'
 import { newProgress } from '../src/lib/srs'
 import TypeAnswer from '../src/components/exercises/TypeAnswer'
 
-test('el camino arranca con la primera cápsula abierta y las demás bloqueadas', async () => {
+test('el módulo muestra directamente las cápsulas y conserva sus bloqueos', async () => {
   render(
     <StoreProvider>
       <App />
@@ -18,6 +18,12 @@ test('el camino arranca con la primera cápsula abierta y las demás bloqueadas'
   )
 
   const primera = await screen.findByRole('button', { name: 'Cápsula 1' })
+  assert.ok(screen.getByRole('heading', { name: 'Módulo 1' }))
+  assert.equal(screen.queryByRole('button', { name: 'Módulo 1' }), null)
+  assert.equal(screen.queryByText('Sección 1'), null)
+  for (const number of [3, 4]) {
+    assert.ok(screen.getByRole('button', { name: `Cápsula ${number} (próximamente)` }).hasAttribute('disabled'))
+  }
   assert.equal(primera.hasAttribute('disabled'), false)
 
   // Cualquier nodo posterior nace bloqueado.
@@ -27,7 +33,7 @@ test('el camino arranca con la primera cápsula abierta y las demás bloqueadas'
   }
 })
 
-test('pulsar el nodo entra directo a practicar y guarda el progreso', async () => {
+test('pulsar una cápsula del camino entra a practicar y guarda el progreso', async () => {
   const user = userEvent.setup()
   render(
     <StoreProvider>
@@ -35,7 +41,6 @@ test('pulsar el nodo entra directo a practicar y guarda el progreso', async () =
     </StoreProvider>,
   )
 
-  // Sin pantalla intermedia: del camino a la primera pregunta.
   await user.click(await screen.findByRole('button', { name: 'Cápsula 1' }))
 
   await screen.findByText('¿Qué significa?')

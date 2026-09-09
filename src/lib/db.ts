@@ -26,7 +26,7 @@ export const DEFAULT_SETTINGS: Settings = {
   // una rezagada no bloquea el camino.
   unlockThreshold: 0.5,
   showKeyboard: true,
-  theme: 'oscuro',
+  theme: 'claro',
 }
 
 interface Schema extends DBSchema {

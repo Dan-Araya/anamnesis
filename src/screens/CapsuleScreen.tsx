@@ -1,9 +1,9 @@
-import { capsuleLabel, getNode, isEmpty, moduleLabel, sectionLabel } from '@/content'
+import { capsuleLabel, getNode, isEmpty, moduleLabel } from '@/content'
 import ParadigmTable from '@/components/ParadigmTable'
 
 /**
  * El material de una cápsula, para consultarlo fuera de la práctica. Se llega
- * desde el final de una sesión: el camino en sí entra directo a practicar.
+ * desde el final de una sesión; cada cápsula se practica directamente desde el camino.
  */
 export default function CapsuleScreen({
   capsuleId,
@@ -24,7 +24,7 @@ export default function CapsuleScreen({
     )
   }
 
-  const { capsule, section, module } = node
+  const { capsule, module } = node
 
   return (
     <div className="screen">
@@ -33,7 +33,7 @@ export default function CapsuleScreen({
       </button>
 
       <div className="modulo__num" style={{ marginTop: 12 }}>
-        {moduleLabel(module)} · {sectionLabel(section)}
+        {moduleLabel(module)}
       </div>
       <h1 className="screen__title" style={{ marginTop: 2 }}>
         {capsuleLabel(capsule)}

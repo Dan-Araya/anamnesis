@@ -4,4 +4,17 @@
     <string name="title_activity_main">Anamnesis</string>
     <string name="package_name">cl.danaraya.anamnesis</string>
     <string name="custom_url_scheme">cl.danaraya.anamnesis</string>
+    <string name="widget_name">Racha diaria</string>
+    <string name="widget_description">Tu racha, objetivo diario y acceso directo a practicar griego.</string>
+    <string name="widget_streak_count">%1$d</string>
+    <plurals name="widget_days"><item quantity="one">día de racha</item><item quantity="other">días de racha</item></plurals>
+    <string name="widget_days_preview">días de racha</string>
+    <string name="widget_first_open">Abre Anamnesis para actualizar</string>
+    <string name="widget_start_streak">Hoy empieza tu próxima racha</string>
+    <string name="widget_keep_streak">Un poco de griego, cada día</string>
+    <string name="widget_keep_going">Tu racha sigue creciendo</string>
+    <string name="widget_goal_done">Objetivo de hoy completado</string>
+    <string name="widget_today_count">Hoy · %1$d / %2$d respuestas</string>
+    <string name="widget_today_preview">Tu objetivo diario</string>
+    <string name="widget_practice">Practicar →</string>
 </resources>

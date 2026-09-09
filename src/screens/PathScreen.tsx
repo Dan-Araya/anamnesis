@@ -1,176 +1,155 @@
 import { useEffect, useMemo, useRef } from 'react'
-import type { ModuleContent, Section } from '@/types'
+import type { ModuleContent } from '@/types'
 import type { CapsuleStatus } from '@/lib/session'
 import { useStore } from '@/store'
 import { currentCapsule } from '@/lib/session'
-import { capsuleLabel, moduleLabel, sectionLabel } from '@/content'
+import { Column, Laurel, LockIcon } from '@/components/GreekOrnament'
 
-/**
- * El camino: un scroll continuo de nodos. Cada nodo es una cápsula y al
- * pulsarlo se practica; módulos y secciones solo aparecen como rótulos que
- * separan tramos. No se entra en ellos, se atraviesan.
- */
-export default function PathScreen({
-  onPractice,
-}: {
+/** Dos niveles visibles: módulos y cápsulas. Los ids de práctica se conservan. */
+export default function PathScreen({ onPractice }: {
   onPractice: (capsuleId: string) => void
 }) {
-  const { statuses } = useStore()
+  const { statuses, streak } = useStore()
   const actual = currentCapsule(statuses)
-  const actualRef = useRef<HTMLDivElement>(null)
+  const grupos = useMemo(() => agrupar(statuses), [statuses])
+  const refScreen = useRef<HTMLDivElement>(null)
+  const refActual = useRef<HTMLElement>(null)
 
-  // Al abrir la app, deja a la vista el nodo en el que se quedó.
+  // El camino arranca donde está el usuario: si su módulo queda fuera de la
+  // vista, la pantalla salta a él en vez de obligar a deslizar cada día.
   useEffect(() => {
-    actualRef.current?.scrollIntoView({ block: 'center' })
+    const screen = refScreen.current
+    const el = refActual.current
+    if (!screen || !el) return
+    const s = screen.getBoundingClientRect()
+    const e = el.getBoundingClientRect()
+    if (e.top < s.top || e.top >= s.bottom) {
+      screen.scrollTop += e.top - s.top - 12
+    }
   }, [])
 
-  const grupos = useMemo(() => agrupar(statuses), [statuses])
-
-  if (statuses.length === 0) {
-    return (
-      <div className="screen">
-        <div className="vacio">
-          <div className="vacio__icono">🏛️</div>
-          <p>
-            Aún no hay contenido. Añade un módulo en <code>src/content/modules/</code>.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  let posicion = 0
-
   return (
-    <div className="screen camino">
-      <header className="app-heading">
-        <div>
-          <div className="app-heading__kicker">ἀνάμνησις</div>
-          <h1>Tu camino</h1>
+    <div className="screen camino" ref={refScreen}>
+      <header className="marble-heading">
+        <div className="marble-heading__top">
+          <span className="eyebrow">ἀνάμνησις</span>
+          <span className="streak" aria-label={`Racha de ${streak} ${streak === 1 ? 'día' : 'días'}`}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2c1 6-6 6-4 11 2-1 3-3 3-5 5 4 8 7 5 11-4 5-12 2-12-4 0-5 5-7 8-13Z" /></svg>
+            {streak} {streak === 1 ? 'día' : 'días'}
+          </span>
         </div>
-        <span className="app-heading__mark griego">α</span>
+        <div className="marble-heading__brand">
+          <Laurel className="brand-laurel" />
+          <h1>Anamnesis</h1>
+          <Column className="brand-column" />
+        </div>
+        <p>Un poco de griego, cada día</p>
+        <div className="greek-divider" aria-hidden="true"><span>✦</span></div>
       </header>
-      {grupos.map((grupo) => (
-        <section key={grupo.module.id}>
-          <header className="camino__rotulo">
-            <span className="camino__rotulo-texto">{moduleLabel(grupo.module)}</span>
-            {grupo.module.summary && (
-              <p className="camino__rotulo-sub">{grupo.module.summary}</p>
-            )}
-          </header>
 
-          {grupo.secciones.map((bloque) => (
-            <div key={bloque.section.id}>
-              {/* La sección solo se rotula si el módulo tiene más de una. */}
-              {grupo.secciones.length > 1 && (
-                <div className="camino__subrotulo">{sectionLabel(bloque.section)}</div>
-              )}
-
-              {bloque.items.map((status) => (
-                <Nodo
-                  key={status.capsule.id}
-                  status={status}
-                  posicion={posicion++}
-                  esActual={status.capsule.id === actual?.capsule.id}
-                  ref={status.capsule.id === actual?.capsule.id ? actualRef : undefined}
-                  onPractice={onPractice}
-                />
-              ))}
-            </div>
-          ))}
-        </section>
-      ))}
-
-      <div className="camino__fin">
-        <span>Fin del camino por ahora</span>
-      </div>
+      <div className="path-intro"><span className="eyebrow">Tu camino</span><span>Cápsula a cápsula</span></div>
+      {grupos.map((grupo) => {
+        const completed = grupo.items.filter(s => s.completed).length
+        const total = grupo.items.filter(s => s.total > 0).length
+        return (
+          <section className="learning-module" key={grupo.module.id} aria-labelledby={`module-${grupo.module.id}`}
+            ref={actual?.module.id === grupo.module.id ? refActual : undefined}>
+            <header className="module-heading">
+              <div>
+                <h2 id={`module-${grupo.module.id}`}>Módulo {grupo.module.number}</h2>
+                {grupo.module.title && <p className="module-heading__title">{grupo.module.title}</p>}
+                {grupo.module.summary && <p className="module-heading__summary">{grupo.module.summary}</p>}
+                <span className="module-heading__meta">{completed} de {total} cápsulas completadas</span>
+              </div>
+              <Laurel className={`module-heading__laurel ${completed === total && total > 0 ? 'is-complete' : ''}`} />
+            </header>
+            <CapsulePath moduleId={grupo.module.id} items={grupo.items} currentId={actual?.capsule.id} onPractice={onPractice} />
+          </section>
+        )
+      })}
+      <div className="camino__fin"><Laurel /><p>{statuses.length ? 'Cada paso deja huella.' : 'El camino estará disponible cuando haya contenido.'}</p><span>{statuses.length > 0 && 'Vuelve mañana y sigue construyendo lo aprendido.'}</span></div>
     </div>
   )
 }
 
 interface Grupo {
   module: ModuleContent
-  secciones: { section: Section; items: CapsuleStatus[] }[]
+  items: CapsuleStatus[]
 }
 
-/** Reagrupa la lista plana de cápsulas por módulo y sección. */
 function agrupar(statuses: CapsuleStatus[]): Grupo[] {
   const grupos: Grupo[] = []
-
   for (const status of statuses) {
     let grupo = grupos.at(-1)
     if (grupo?.module.id !== status.module.id) {
-      grupo = { module: status.module, secciones: [] }
+      grupo = { module: status.module, items: [] }
       grupos.push(grupo)
     }
-
-    const bloque = grupo.secciones.at(-1)
-    if (bloque?.section.id === status.section.id) {
-      bloque.items.push(status)
-    } else {
-      grupo.secciones.push({ section: status.section, items: [status] })
-    }
+    grupo.items.push(status)
   }
-
   return grupos
 }
 
-/** Zigzag: centro, derecha, centro, izquierda. */
-const OFFSETS = [0, 58, 0, -58]
+// Las coordenadas del sendero y de los botones comparten la misma geometría.
+const PATH_X = [30, 68, 60, 30]
+const STEP_HEIGHT = 192
+const NODE_CENTER = 64
 
-function Nodo({
-  status,
-  posicion,
-  esActual,
-  onPractice,
-  ref,
-}: {
-  status: CapsuleStatus
-  posicion: number
-  esActual: boolean
-  onPractice: (capsuleId: string) => void
-  ref?: React.Ref<HTMLDivElement>
+function CapsulePath({ moduleId, items, currentId, onPractice }: {
+  moduleId: string;
+  items: CapsuleStatus[]; currentId?: string; onPractice: (id: string) => void
 }) {
-  const vacia = status.total === 0
-  const disponible = status.unlocked && !vacia
-  const pct = Math.round((status.mastery ?? 0) * 100)
-
-  const clases = ['nodo']
-  if (status.completed) clases.push('nodo--completado')
-  else if (esActual && disponible) clases.push('nodo--actual')
-  if (!status.unlocked) clases.push('nodo--bloqueado')
-  if (vacia) clases.push('nodo--vacio')
+  // Solo presentación: estos huecos no generan tarjetas ni entran en el SRS.
+  const slots = Array.from({ length: Math.max(4, items.length) }, (_, i) => items[i])
+  const points = slots.map((_, i) => ({ x: PATH_X[i % PATH_X.length]! * 3.6, y: NODE_CENTER + i * STEP_HEIGHT }))
+  const curve = points.map((point, i) => {
+    if (i === 0) return `M ${point.x} ${point.y}`
+    const prev = points[i - 1]!
+    const middle = (prev.y + point.y) / 2
+    return `C ${prev.x} ${middle}, ${point.x} ${middle}, ${point.x} ${point.y}`
+  }).join(' ')
 
   return (
-    <div
-      className="camino__parada"
-      style={{ transform: `translateX(${OFFSETS[posicion % OFFSETS.length]}px)` }}
-      ref={ref}
-    >
-      {esActual && disponible && !status.completed && (
-        <span className="nodo__banderin">Empezar</span>
-      )}
-
-      <button
-        type="button"
-        className={clases.join(' ')}
-        disabled={!disponible}
-        // El anillo exterior muestra lo dominado de la cápsula.
-        style={{ ['--pct' as string]: pct }}
-        aria-label={`${capsuleLabel(status.capsule)}${
-          status.unlocked ? '' : ' (bloqueada)'
-        }`}
-        onClick={() => onPractice(status.capsule.id)}
-      >
-        <span className="nodo__cara">
-          {!status.unlocked ? '🔒' : status.completed ? '✓' : vacia ? '·' : status.capsule.number}
-        </span>
-      </button>
-
-      <span className="nodo__etiqueta">{capsuleLabel(status.capsule)}</span>
-      {disponible && status.due > 0 && (
-        <span className="nodo__aviso">{status.due} por repasar</span>
-      )}
+    <div className="capsule-path">
+      <svg className="capsule-path__curve" viewBox={`0 0 360 ${slots.length * STEP_HEIGHT}`} preserveAspectRatio="none" aria-hidden="true">
+        <path className="capsule-path__edge" d={curve} />
+        <path className="capsule-path__stone" d={curve} />
+        <path className="capsule-path__inlay" d={curve} />
+      </svg>
+      <ol className="capsule-path__stops">
+        {slots.map((status, index) => {
+          const placeholder = !status || status.total === 0
+          const available = !placeholder && status.unlocked
+          const current = available && status.capsule.id === currentId && !status.completed
+          const label = status?.capsule.title ?? `Cápsula ${index + 1}`
+          const pct = Math.round((status?.mastery ?? 0) * 100)
+          return (
+            <li className="capsule-stop" key={status?.capsule.id ?? `preview-${moduleId}-${index}`}>
+              <div className="capsule-stop__position" style={{ left: `${PATH_X[index % PATH_X.length]}%` }}>
+                {current && <span className="capsule-stop__flag">Tu siguiente paso</span>}
+                <button type="button"
+                  className={`capsule-medallion ${!available ? 'capsule-medallion--locked' : ''} ${placeholder ? 'capsule-medallion--placeholder' : ''}`}
+                  disabled={!available}
+                  aria-label={`${label}${placeholder ? ' (próximamente)' : !available ? ' (bloqueada)' : ''}`}
+                  aria-describedby={`capsule-state-${status?.capsule.id ?? `preview-${moduleId}-${index}`}`}
+                  style={{ ['--pct' as string]: pct }}
+                  onClick={() => available && onPractice(status.capsule.id)}>
+                  <span className="capsule-medallion__face">
+                    <span className="capsule-medallion__number">{index + 1}</span>
+                    {placeholder ? <span className="capsule-medallion__glyph" aria-hidden="true">···</span> : !available ? <LockIcon /> : status.completed ? <span className="capsule-medallion__check">✓</span> : <span className="capsule-medallion__glyph" aria-hidden="true">{['α', 'β', 'γ', 'δ'][index % 4]}</span>}
+                  </span>
+                </button>
+                <div className="capsule-stop__label">
+                  <h3>{label}</h3>
+                  <span id={`capsule-state-${status?.capsule.id ?? `preview-${moduleId}-${index}`}`}>
+                    {placeholder ? 'Próximamente' : !available ? 'Por desbloquear' : status.due > 0 ? `${status.due} por repasar` : status.completed ? 'Completada · repasar' : status.started > 0 ? 'Continuar' : 'Empezar'}
+                  </span>
+                </div>
+              </div>
+            </li>
+          )
+        })}
+      </ol>
     </div>
   )
 }

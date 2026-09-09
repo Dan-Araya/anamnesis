@@ -26,8 +26,8 @@ export default defineConfig({
         short_name: 'Griego',
         description: 'Práctica diaria de griego antiguo por módulos.',
         lang: 'es',
-        theme_color: '#1b2233',
-        background_color: '#12161f',
+        theme_color: '#f6f3ed',
+        background_color: '#f6f3ed',
         display: 'standalone',
         orientation: 'portrait',
         // start_url y scope los deriva el plugin de `base`.

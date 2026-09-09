@@ -3,7 +3,7 @@ import { capsuleLabel } from '@/content'
 import { currentCapsule } from '@/lib/session'
 
 /**
- * Tarjetas: el repaso de lo ya visto, mezclando todas las secciones. Aquí no
+ * Tarjetas: el repaso de lo ya visto, mezclando todos los módulos. Aquí no
  * entra material nuevo —eso es cosa del camino—; esta pantalla sirve para
  * sostener lo aprendido y para mantener la racha en un día suelto.
  */

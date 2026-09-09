@@ -219,6 +219,22 @@ ANDROID_HOME=/ruta/al/Android/Sdk ./gradlew assembleDebug
 El APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`. Para abrir
 el proyecto en Android Studio usa `npm run open:android`.
 
+### Widget de racha diaria (Android)
+
+En la app, abre **Ajustes → Añadir widget** y confirma la colocación en Android.
+También puedes mantener pulsada la pantalla de inicio y buscar
+**Widgets → Anamnesis → Racha diaria**. Muestra la racha, las respuestas de hoy
+respecto al objetivo y un botón para entrar directamente a practicar.
+
+El widget recibe una copia de las estadísticas diarias al abrir la app,
+practicar, cambiar el objetivo o restaurar el progreso. Esta copia local es
+solo para mostrar datos: no modifica IndexedDB ni los identificadores de tarjeta.
+Android solicita además actualizaciones periódicas cada 30 minutos (pueden
+retrasarse por ahorro de batería); la fecha y la zona horaria del dispositivo
+se usan para recalcular el día y la racha. No requiere notificaciones ni red.
+
+Pruebas nativas: `cd android && ./gradlew :app:testDebugUnitTest`.
+
 ### Cuenta y respaldo remoto
 
 1. Crea un proyecto en Supabase y ejecuta `supabase/schema.sql` en el editor SQL.
@@ -227,7 +243,8 @@ el proyecto en Android Studio usa `npm run open:android`.
    de redirección permitidas. Añade también
    `cl.danaraya.anamnesis://auth/callback` para que los enlaces abran Android.
 
-Sin esas variables la aplicación permanece íntegramente local. Con ellas, en
+Sin esas variables la aplicación permanece íntegramente local. Usa
+`VITE_SUPABASE_PUBLISHABLE_KEY` para la clave pública. Con ellas, en
 **Ajustes** aparece el acceso por enlace de correo y los controles para guardar
 o restaurar una copia privada. La exportación JSON sigue disponible como
 respaldo independiente.

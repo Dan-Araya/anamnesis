@@ -10,12 +10,14 @@ import {
 import type { User } from '@supabase/supabase-js'
 import { Capacitor } from '@capacitor/core'
 import { App as CapacitorApp } from '@capacitor/app'
+import { Browser } from '@capacitor/browser'
 import { cloudConfigured, supabase } from '@/lib/supabase'
 
 interface AuthState {
   configured: boolean
   loading: boolean
   user: User | null
+  signInWithGoogle(): Promise<void>
   sendMagicLink(email: string): Promise<void>
   signOut(): Promise<void>
 }
@@ -41,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let removeDeepLinkListener: (() => Promise<void>) | undefined
     if (Capacitor.isNativePlatform()) {
       void CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+        void Browser.close()
         const parsed = new URL(url)
         const code = parsed.searchParams.get('code')
         if (code) {
@@ -77,6 +80,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }, [])
 
+  const signInWithGoogle = useCallback(async () => {
+    if (!supabase) throw new Error('Supabase no está configurado')
+    const native = Capacitor.isNativePlatform()
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: native
+          ? 'cl.danaraya.anamnesis://auth/callback'
+          : window.location.href.split('#')[0],
+        skipBrowserRedirect: native,
+      },
+    })
+    if (error) throw error
+    if (native && data.url) await Browser.open({ url: data.url })
+  }, [])
+
   const signOut = useCallback(async () => {
     if (!supabase) return
     const { error } = await supabase.auth.signOut()
@@ -84,8 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo(
-    () => ({ configured: cloudConfigured, loading, user, sendMagicLink, signOut }),
-    [loading, user, sendMagicLink, signOut],
+    () => ({ configured: cloudConfigured, loading, user, signInWithGoogle, sendMagicLink, signOut }),
+    [loading, user, signInWithGoogle, sendMagicLink, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -1,0 +1,7 @@
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp" android:minHeight="180dp"
+    android:targetCellWidth="4" android:targetCellHeight="3"
+    android:minResizeWidth="220dp" android:minResizeHeight="180dp"
+    android:initialLayout="@layout/practice_widget" android:previewLayout="@layout/practice_widget"
+    android:description="@string/widget_description"
+    android:updatePeriodMillis="1800000" android:resizeMode="horizontal|vertical" android:widgetCategory="home_screen" />

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useStore } from '@/store'
 import { useAuth } from '@/auth'
+import { requestPracticeWidget, supportsPracticeWidget } from '@/lib/practice-widget'
 import { restoreCloudBackup, saveCloudBackup } from '@/lib/cloud'
 import { dayKey, exportBackup, importBackup, resetAll, type Backup } from '@/lib/db'
 
@@ -45,6 +46,7 @@ export default function SettingsScreen() {
     <div className="screen">
       <h1 className="screen__title">Ajustes</h1>
 
+      {supportsPracticeWidget() && <PracticeWidgetCard />}
       <AccountCard onRestored={refresh} />
 
       <div className="card">
@@ -192,7 +194,7 @@ export default function SettingsScreen() {
 }
 
 function AccountCard({ onRestored }: { onRestored: () => Promise<void> }) {
-  const { configured, loading, user, sendMagicLink, signOut } = useAuth()
+  const { configured, loading, user, signInWithGoogle, sendMagicLink, signOut } = useAuth()
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -232,7 +234,17 @@ function AccountCard({ onRestored }: { onRestored: () => Promise<void> }) {
       <div className="card account-card">
         <div className="eyebrow">Cuenta y respaldo</div>
         <strong>Protege tu progreso</strong>
-        <p className="muted small">Recibe un enlace de acceso. No necesitas contraseña.</p>
+        <p className="muted small">Entra rápidamente con Google o recibe un enlace por correo.</p>
+        <button
+          type="button"
+          className="btn btn--google btn--wide"
+          disabled={busy}
+          onClick={() => void action(signInWithGoogle)}
+        >
+          <GoogleMark />
+          Continuar con Google
+        </button>
+        <div className="auth-divider"><span>o con correo</span></div>
         <label className="input-label" htmlFor="account-email">Correo electrónico</label>
         <input
           id="account-email"
@@ -306,6 +318,17 @@ function AccountCard({ onRestored }: { onRestored: () => Promise<void> }) {
   )
 }
 
+function GoogleMark() {
+  return (
+    <svg className="google-mark" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#4285f4" d="M21.6 12.2c0-.7-.1-1.5-.2-2.2H12v4.3h5.4a4.7 4.7 0 0 1-2 3v2.8h3.5c2-1.9 3.2-4.6 3.2-7.9Z" />
+      <path fill="#34a853" d="M12 22c2.9 0 5.3-1 7-2.6l-3.5-2.8a6.5 6.5 0 0 1-9.7-3.4H2.2V16A10 10 0 0 0 12 22Z" />
+      <path fill="#fbbc05" d="M5.8 13.2a6 6 0 0 1 0-3.9V6.5H2.2a10 10 0 0 0 0 9.5l3.6-2.8Z" />
+      <path fill="#ea4335" d="M12 5.5c1.7 0 3.2.6 4.4 1.7l3.3-3.2A10 10 0 0 0 2.2 6.5l3.6 2.8A6.1 6.1 0 0 1 12 5.5Z" />
+    </svg>
+  )
+}
+
 function clamp(value: string, min: number, max: number): number {
   const n = Number(value)
   if (Number.isNaN(n)) return min
@@ -339,4 +362,23 @@ function Interruptor({
       />
     </div>
   )
+}
+
+function PracticeWidgetCard() {
+  const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
+  const addWidget = async () => {
+    setBusy(true)
+    try { setMessage(await requestPracticeWidget()) }
+    catch { setMessage('No se pudo abrir el selector. Puedes añadirlo desde Widgets → Anamnesis en tu pantalla de inicio.') }
+    finally { setBusy(false) }
+  }
+  return <section className="card" style={{ marginBottom: 16 }} aria-labelledby="widget-title">
+    <strong id="widget-title">Tu racha en la pantalla de inicio</strong>
+    <p className="muted small">Consulta tu racha, sigue el objetivo de hoy y abre la práctica desde el widget de Anamnesis.</p>
+    <button className="btn btn--primary btn--wide" type="button" disabled={busy} onClick={() => void addWidget()}>
+      {busy ? 'Abriendo…' : 'Añadir widget'}
+    </button>
+    {message && <p className="muted small" role="status">{message}</p>}
+  </section>
 }
