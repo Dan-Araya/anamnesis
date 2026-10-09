@@ -44,9 +44,13 @@ Adelantar un repaso no falsea la programación: acertar una tarjeta mucho antes
 de tiempo la refresca pero **no alarga su intervalo** (`EARLY_THRESHOLD` en
 `src/lib/srs.ts`). Fallarla, en cambio, sí la penaliza siempre.
 
-Dentro de una misma sesión, una tarjeta vuelve a aparecer mientras siga en
-aprendizaje —no solo cuando se falla—, hasta un máximo de cuatro veces. Así el
-vocabulario nuevo se ve un par de veces antes de terminar y llega a graduarse.
+Dentro de una misma sesión el recorrido tiene dos fases. La **cola principal**
+queda fija al comenzar: cada tarjeta aparece una sola vez, una respuesta
+correcta nunca la vuelve a encolar —aunque la tarjeta siga en aprendizaje— y
+el contador no cambia de denominador. Al terminar, las tarjetas falladas
+—hasta tres distintas— reaparecen una única vez en una fase de **refuerzo**;
+las que sigan fallando y las que no cupieron quedan programadas por el SRS
+para cápsulas posteriores, sin desmarcar la cápsula.
 
 ## Comandos
 
@@ -158,13 +162,21 @@ De cada entrada de contenido salen varias tarjetas independientes:
 
 | Contenido      | Tarjetas que genera                                        |
 | -------------- | ---------------------------------------------------------- |
-| Palabra        | Reconocer (griego → español) y producir (español → griego)  |
+| Palabra        | Reconocer (griego → español), producir (español → griego) y, si la declara, transliterar (griego → latino) |
 | Celda de tabla | Una por casilla del paradigma                               |
 | Frase          | Una de traducción                                           |
 
 El campo `cards` permite limitar esas direcciones. Las correlaciones y
 expresiones largas suelen querer solo `["reconocer"]`: no tiene sentido pedir
-que se teclee `τε … καί` letra a letra.
+que se teclee `τε … καί` letra a letra. La dirección `"transliterar"` requiere
+`transliteration` (la respuesta correcta) y `transliterationDistractors`
+(exactamente tres alternativas); `check-content` la rechaza sin ellos.
+
+La **transliteración** es una operación distinta de la traducción y de la
+pronunciación: cómo se escriben las letras griegas con el alfabeto latino. Por
+ahora es básica —no representa acentos ni espíritus— y conserva
+correspondencias como θ → th o η → ē. Cada letra declara la suya en el campo
+`transliteration`.
 
 El formato de la pregunta se endurece según se asienta la tarjeta: primero
 opción múltiple, después escribir la forma de memoria o autoevaluarse con una
@@ -197,9 +209,10 @@ En un par de minutos la app estará en `https://dan-araya.github.io/anamnesis/`.
 Ábrela en Chrome en el móvil y elige **Añadir a pantalla de inicio**. A partir
 de ahí funciona sin conexión y se actualiza sola cuando vuelvas a publicar.
 
-El progreso no se sincroniza entre dispositivos. En **Ajustes** puedes exportar
-e importar un JSON con todo el historial: hazlo antes de cambiar de móvil o de
-limpiar los datos del navegador.
+El progreso no se sincroniza automáticamente entre dispositivos. En
+**Ajustes** puedes exportar e importar un JSON con todo el historial o, si
+configuras una cuenta, guardar y restaurar manualmente una copia privada en la
+nube. Haz una copia antes de cambiar de móvil o limpiar los datos del navegador.
 
 ### Android con Capacitor
 

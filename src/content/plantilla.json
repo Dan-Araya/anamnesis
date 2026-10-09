@@ -19,6 +19,28 @@
           "id": "m0N-s01-c01",
           "number": 1,
           "title": "Opcional",
+          "letters": [
+            {
+              "_comentario": [
+                "Cada letra genera exactamente dos tarjetas SRS: reconocer el nombre",
+                "desde la forma y producir la minúscula desde el nombre. El id es",
+                "monolingüe y estable (p. ej. «alpha»): las tarjetas serán",
+                "«l:alpha:rec» y «l:alpha:pro».",
+                "Si la letra tiene una variante contextual de final de palabra (solo",
+                "sigma: «ς»), declárala en «finalForm». Es metadata de presentación:",
+                "no genera tarjeta propia ni cuenta como letra adicional. check-content",
+                "exige que sea opcional, no vacía y Unicode NFC cuando exista."
+              ],
+              "id": "alpha",
+              "uppercase": "Α",
+              "lowercase": "α",
+              "name": "alfa",
+              "phonetic": "/a/",
+              "transliteration": "a",
+              "pronunciation": "Su valor básico es /a/.",
+              "note": "Opcional."
+            }
+          ],
           "vocabulary": [
             {
               "id": "m0N-s01-ejemplo",
@@ -28,7 +50,23 @@
               "pos": "sustantivo",
               "notes": "Opcional.",
               "tags": ["opcional"],
-              "cards": ["reconocer", "producir"]
+              "cards": ["reconocer", "producir"],
+              "_comentario": [
+                "En la pregunta de reconocer, la respuesta correcta se muestra como la",
+                "primera traducción. Si conviene otra etiqueta —p. ej. «y / pero / por",
+                "otra parte»—, declárala en recognitionLabel.",
+                "Si la cápsula no tiene vocabulario anterior suficiente para distraer,",
+                "declara distractores editoriales del mismo idioma y categoría.",
+                "check-content exige al menos tres opciones válidas por entrada."
+              ],
+              "recognitionLabel": "Opcional: etiqueta de la respuesta correcta al reconocer",
+              "distractors": ["Opcional", "alternativas", "editoriales"],
+              "transliteration": "Opcional con «transliterar» en cards: p. ej. «logos»",
+              "transliterationDistractors": [
+                "Tres distractores de transliteración",
+                "distintos entre sí",
+                "y de la respuesta correcta"
+              ]
             }
           ],
           "paradigms": [

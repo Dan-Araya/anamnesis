@@ -1,9 +1,12 @@
 import { capsuleLabel, getNode, isEmpty, moduleLabel } from '@/content'
+import { useStore } from '@/store'
 import ParadigmTable from '@/components/ParadigmTable'
+import CapsuleGreekLine from '@/components/CapsuleGreekLine'
 
 /**
- * El material de una cápsula, para consultarlo fuera de la práctica. Se llega
- * desde el final de una sesión; cada cápsula se practica directamente desde el camino.
+ * El material de una cápsula: la lección que se ve antes de practicar. Se
+ * llega tocando un nodo del camino y desde aquí se inicia la sesión. En una
+ * cápsula ya completada el botón ofrece repetirla a voluntad.
  */
 export default function CapsuleScreen({
   capsuleId,
@@ -12,8 +15,9 @@ export default function CapsuleScreen({
 }: {
   capsuleId: string
   onBack: () => void
-  onPractice: (capsuleId: string) => void
+  onPractice: (capsuleId: string, freePractice?: boolean) => void
 }) {
+  const { statuses } = useStore()
   const node = getNode(capsuleId)
 
   if (!node) {
@@ -25,6 +29,9 @@ export default function CapsuleScreen({
   }
 
   const { capsule, module } = node
+  const completed = Boolean(
+    statuses.find((s) => s.capsule.id === capsuleId)?.completed,
+  )
 
   return (
     <div className="screen">
@@ -38,6 +45,7 @@ export default function CapsuleScreen({
       <h1 className="screen__title" style={{ marginTop: 2 }}>
         {capsuleLabel(capsule)}
       </h1>
+      <CapsuleGreekLine capsule={capsule} />
 
       {isEmpty(capsule) ? (
         <div className="card">
@@ -51,17 +59,88 @@ export default function CapsuleScreen({
           type="button"
           className="btn btn--primary btn--wide"
           style={{ marginBottom: 20 }}
-          onClick={() => onPractice(capsule.id)}
+          onClick={() => onPractice(capsule.id, completed)}
         >
-          Practicar esta cápsula
+          {completed ? 'Repasar cápsula' : 'Comenzar práctica'}
         </button>
+      )}
+
+      {capsule.letters.length > 0 && (
+        <section>
+          <h2 className="screen__title" style={{ fontSize: '1.1rem' }}>
+            El alfabeto
+          </h2>
+          <p className="muted small" style={{ marginTop: 0 }}>
+            Vas a aprender estas letras: su forma —mayúscula y minúscula—, su nombre, su
+            sonido y su transliteración, la manera de escribirlas con el alfabeto latino.
+            La transliteración no representa necesariamente la pronunciación exacta.
+          </p>
+          {capsule.letters.map((l) => (
+            <div className="card" key={l.id}>
+              <div className="row">
+                <span className="griego" style={{ fontSize: '1.6rem' }}>
+                  {l.uppercase}
+                </span>
+                <span className="muted">
+                  {l.name} mayúscula · {l.phonetic}
+                </span>
+              </div>
+              <div className="row" style={{ marginTop: 4 }}>
+                <span className="griego" style={{ fontSize: '1.6rem' }}>
+                  {l.lowercase}
+                </span>
+                <span className="muted">{l.name} minúscula</span>
+              </div>
+              {l.finalForm && (
+                <div className="row" style={{ marginTop: 4 }}>
+                  <span className="griego" style={{ fontSize: '1.6rem' }}>
+                    {l.finalForm}
+                  </span>
+                  <span className="muted">{l.name} final</span>
+                </div>
+              )}
+              <p className="small" style={{ margin: '4px 0 0' }}>
+                Transliteración: <strong>{l.transliteration}</strong>
+              </p>
+              <p className="small" style={{ marginBottom: 0 }}>
+                {l.pronunciation}
+              </p>
+              {l.note && (
+                <p className="muted small" style={{ margin: '8px 0 0' }}>
+                  {l.note}
+                </p>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {capsule.notes && capsule.notes.length > 0 && (
+        <section>
+          <h2 className="screen__title" style={{ fontSize: '1.1rem', marginTop: 24 }}>
+            Nota
+          </h2>
+          <div className="card">
+            {capsule.notes.map((note, i) => (
+              <p className="small" key={i} style={{ margin: i ? '8px 0 0' : 0 }}>
+                {note}
+              </p>
+            ))}
+          </div>
+        </section>
       )}
 
       {capsule.vocabulary.length > 0 && (
         <section>
-          <h2 className="screen__title" style={{ fontSize: '1.1rem' }}>
+          <h2 className="screen__title" style={{ fontSize: '1.1rem', marginTop: 24 }}>
             Vocabulario
           </h2>
+          {capsule.vocabulary.some((v) => v.transliteration) && (
+            <p className="muted small" style={{ marginTop: 0 }}>
+              En esta transliteración básica no representamos todavía los acentos ni los
+              espíritus.
+            </p>
+          )}
           <div className="card">
             <ul className="lista">
               {capsule.vocabulary.map((v) => (
@@ -72,6 +151,11 @@ export default function CapsuleScreen({
                     </span>
                     {v.info && <span className="muted small"> {v.info}</span>}
                     {v.notes && <div className="muted small">{v.notes}</div>}
+                    {v.transliteration && (
+                      <div className="muted small">
+                        Transliteración: {v.transliteration}
+                      </div>
+                    )}
                   </span>
                   <span className="muted" style={{ textAlign: 'right' }}>
                     {v.es.join(', ')}

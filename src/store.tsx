@@ -133,8 +133,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const streak = useMemo(() => computeStreak(daily), [daily])
 
   const statuses = useMemo(
-    () => capsuleStatuses(progress, settings),
-    [progress, settings],
+    () => capsuleStatuses(progress),
+    [progress],
   )
 
   const value: Store = {

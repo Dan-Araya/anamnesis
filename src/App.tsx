@@ -11,7 +11,7 @@ import SettingsScreen from '@/screens/SettingsScreen'
 
 type Route =
   | { name: 'camino' }
-  | { name: 'sesion'; capsuleId?: string; onlyReviews?: boolean }
+  | { name: 'sesion'; capsuleId?: string; onlyReviews?: boolean; freePractice?: boolean }
   | { name: 'capsula'; id: string }
   | { name: 'tarjetas' }
   | { name: 'progreso' }
@@ -33,7 +33,13 @@ export default function App() {
     // A second widget tap must not discard an ongoing session.
     setRoute(previous => previous.name === 'sesion' ? previous : due
       ? { name: 'sesion', onlyReviews: true }
-      : actual ? { name: 'sesion', capsuleId: actual.capsule.id } : { name: 'camino' })
+      : actual
+        // La lección va antes que las preguntas: si la cápsula está sin
+        // empezar, se abre su material, no la sesión.
+        ? (actual.started > 0
+            ? { name: 'sesion', capsuleId: actual.capsule.id }
+            : { name: 'capsula', id: actual.capsule.id })
+        : { name: 'camino' })
   })
 
   useEffect(() => {
@@ -59,6 +65,7 @@ export default function App() {
         <SessionScreen
           capsuleId={route.capsuleId}
           onlyReviews={route.onlyReviews}
+          freePractice={route.freePractice}
           onExit={() =>
             setRoute(route.onlyReviews ? { name: 'tarjetas' } : { name: 'camino' })
           }
@@ -72,14 +79,16 @@ export default function App() {
     <div className="app">
       {route.name === 'camino' && (
         <PathScreen
-          onPractice={(capsuleId) => setRoute({ name: 'sesion', capsuleId })}
+          onOpen={(capsuleId) => setRoute({ name: 'capsula', id: capsuleId })}
         />
       )}
       {route.name === 'capsula' && (
         <CapsuleScreen
           capsuleId={route.id}
           onBack={() => setRoute({ name: 'camino' })}
-          onPractice={(capsuleId) => setRoute({ name: 'sesion', capsuleId })}
+          onPractice={(capsuleId, freePractice) =>
+            setRoute({ name: 'sesion', capsuleId, freePractice: Boolean(freePractice) })
+          }
         />
       )}
       {route.name === 'tarjetas' && (

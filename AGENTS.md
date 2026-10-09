@@ -3,9 +3,11 @@
 ## Proyecto
 
 Anamnesis es una PWA de práctica diaria de griego antiguo por repetición
-espaciada (SRS), de uso personal: sin backend, sin cuentas, con todo el
-progreso guardado localmente en el dispositivo. Se despliega como sitio
-estático en GitHub Pages.
+espaciada (SRS), de uso personal y publicación abierta. El progreso de estudio
+se guarda en el dispositivo. La siguiente etapa del producto incorporará un
+cupo gratuito online y derechos Pro con práctica ilimitada y offline; su
+contrato está en `docs/contrato-sesiones-pro.md`. El frontend se despliega
+como sitio estático en GitHub Pages.
 
 ## Arquitectura (resumen)
 
@@ -16,9 +18,10 @@ estático en GitHub Pages.
   (`cardsForCapsule`) a partir del vocabulario, los paradigmas, las frases y
   los `drills` de cada cápsula. No se guardan como tal: se recalculan en
   cada arranque.
-- **Progreso**: vive en IndexedDB (`src/lib/db.ts`, vía `idb`), indexado por
-  el `id` de cada tarjeta. No hay servidor ni sincronización; el respaldo es
-  el export/import JSON de la pantalla de ajustes.
+- **Progreso**: la fuente de verdad vive en IndexedDB (`src/lib/db.ts`, vía
+  `idb`), indexada por el `id` de cada tarjeta. Se puede respaldar mediante
+  export/import JSON o, con una cuenta opcional, guardar y restaurar una copia
+  privada en Supabase. No existe sincronización automática entre dispositivos.
 - **Repetición espaciada**: `src/lib/srs.ts` (variante SM-2 con pasos de
   aprendizaje). `src/lib/progression.ts` decide qué cápsulas están
   desbloqueadas y arma la cola de cada sesión, mezclando material antiguo
@@ -41,10 +44,14 @@ estático en GitHub Pages.
    deben nombrar el libro de texto ni copiar su numeración de capítulos —
    solo "módulo 1, módulo 2…", genéricos. Verificación: revisar el diff en
    busca de nombres propios de manuales o referencias a su estructura.
-3. **Sin backend ni cuentas.** Toda persistencia es local (IndexedDB) y el
-   despliegue es un sitio estático (GitHub Pages). Verificación: ningún
-   cambio debe añadir llamadas de red a un servicio propio ni un sistema de
-   login.
+3. **Progreso local y nueva política de acceso.** IndexedDB sigue siendo la
+   fuente de verdad del progreso y GitHub Pages sirve el frontend estático.
+   La práctica gratuita online podrá usar identidad anónima de Supabase; la
+   cuenta recuperable será necesaria para comprar/restaurar Pro. Supabase
+   controlará cupo y derechos, además de las copias privadas iniciadas por el
+   usuario. No introducir sincronización automática de progreso sin diseñar
+   primero conflictos y preservación de datos. Ver
+   `docs/contrato-sesiones-pro.md` antes de trabajar en acceso o cobros.
 
 ## Flujo de trabajo
 
@@ -54,6 +61,21 @@ generación de ids en `src/content/index.ts`, o el shape de
 `CardProgress`/`ReviewLog` en `src/types.ts`, parar y confirmar
 explícitamente si hace falta una migración, aunque el cambio parezca
 puramente aditivo.
+
+### Chat maestro y ejecución
+
+Las conversaciones de Codex en este proyecto son, por defecto, un espacio de
+dirección: aquí se discuten arquitectura, contenido, producto, alternativas,
+riesgos y se revisan cambios realizados por otros modelos. Una petición de
+analizar, diseñar, planificar, discutir o revisar **no autoriza a editar el
+repositorio ni a ejecutar despliegues o acciones externas**.
+
+Solo implementar, editar, borrar, publicar o hacer otros cambios cuando el
+usuario lo pida explícitamente. Cuando una propuesta requiera ejecución y el
+usuario no haya pedido que este chat la ejecute, entregar un prompt completo
+para el modelo ejecutor, con objetivo, alcance, archivos relevantes,
+restricciones, criterios de aceptación, pruebas y entregables. Después, revisar
+en este chat el resultado del ejecutor.
 
 Verificación mínima antes de dar un cambio por terminado:
 `npm run typecheck && npm run test && npm run check-content`.

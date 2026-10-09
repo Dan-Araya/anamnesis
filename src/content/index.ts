@@ -1,6 +1,7 @@
 import type {
   Capsule,
   Card,
+  Letter,
   ModuleContent,
   Paradigm,
   Section,
@@ -58,6 +59,7 @@ export function getNode(capsuleId: string): PathNode | undefined {
 /** ¿Tiene la cápsula algo que practicar? */
 export function isEmpty(c: Capsule): boolean {
   return (
+    c.letters.length === 0 &&
     c.vocabulary.length === 0 &&
     c.paradigms.length === 0 &&
     c.sentences.length === 0 &&
@@ -75,6 +77,26 @@ export function sectionLabel(s: Section): string {
 
 export function moduleLabel(m: ModuleContent): string {
   return m.title ?? `Módulo ${m.number}`
+}
+
+/**
+ * Resumen derivado de las letras de una cápsula: sus mayúsculas separadas por
+ * puntos medios («Α · Β · Γ»). Se recalcula a partir de `capsule.letters`; no
+ * se guarda en el contenido, así que nunca puede desincronizarse del título.
+ */
+export function lettersSummary(c: Capsule, separator = ' · '): string {
+  return c.letters.map((l) => l.uppercase).join(separator)
+}
+
+/**
+ * Nombre accesible de una cápsula: el título español y, si tiene letras, su
+ * resumen («Alfa, beta y gamma — Α Β Γ»). Las cápsulas sin letras quedan con
+ * el título a secas.
+ */
+export function capsuleAccessibleName(c: Capsule): string {
+  const label = capsuleLabel(c)
+  const summary = lettersSummary(c, ' ')
+  return summary ? `${label} — ${summary}` : label
 }
 
 // ---------------------------------------------------------------------------
@@ -117,15 +139,27 @@ function cardsForCapsule(node: PathNode): Card[] {
     capsuleId: node.capsule.id,
   }
 
+  // Cada letra genera exactamente dos tarjetas: reconocer el nombre a partir
+  // de la forma y elegir la forma a partir del nombre. La variación
+  // mayúscula/minúscula no genera ids distintos: es presentación, no progreso.
+  for (const l of node.capsule.letters) {
+    cards.push({ ...base, id: `l:${l.id}:rec`, kind: 'letra-reconocer', sourceId: l.id })
+    cards.push({ ...base, id: `l:${l.id}:pro`, kind: 'letra-producir', sourceId: l.id })
+  }
+
   for (const v of node.capsule.vocabulary) {
     // Por defecto una palabra se practica en las dos direcciones; las
-    // expresiones suelen declarar solo "reconocer".
+    // expresiones suelen declarar solo "reconocer". La transliteración es
+    // opcional y se declara junto con su material.
     const directions = v.cards ?? ['reconocer', 'producir']
     if (directions.includes('reconocer')) {
       cards.push({ ...base, id: `v:${v.id}:rec`, kind: 'vocab-reconocer', sourceId: v.id })
     }
     if (directions.includes('producir')) {
       cards.push({ ...base, id: `v:${v.id}:pro`, kind: 'vocab-producir', sourceId: v.id })
+    }
+    if (directions.includes('transliterar')) {
+      cards.push({ ...base, id: `v:${v.id}:trl`, kind: 'vocab-transliterar', sourceId: v.id })
     }
   }
 
@@ -169,16 +203,22 @@ const vocabById = new Map<string, VocabEntry>()
 const paradigmById = new Map<string, Paradigm>()
 const sentenceById = new Map<string, Sentence>()
 const drillById = new Map<string, Paradigm>()
+const letterById = new Map<string, Letter>()
 
 for (const { capsule } of path) {
   for (const v of capsule.vocabulary) vocabById.set(v.id, v)
   for (const p of capsule.paradigms) paradigmById.set(p.id, p)
   for (const s of capsule.sentences) sentenceById.set(s.id, s)
   for (const d of capsule.drills) drillById.set(d.id, d)
+  for (const l of capsule.letters) letterById.set(l.id, l)
 }
 
 export function getVocab(id: string): VocabEntry | undefined {
   return vocabById.get(id)
+}
+
+export function getLetter(id: string): Letter | undefined {
+  return letterById.get(id)
 }
 
 export function getParadigm(id: string): Paradigm | undefined {
@@ -196,3 +236,32 @@ export function getDrill(id: string): Paradigm | undefined {
 
 /** Vocabulario de todo el contenido, para generar distractores. */
 export const allVocab: VocabEntry[] = path.flatMap(({ capsule }) => capsule.vocabulary)
+
+/** Letras de todo el contenido, en orden del camino. */
+export const allLetters: Letter[] = path.flatMap(({ capsule }) => capsule.letters)
+
+/**
+ * Letras presentadas hasta la cápsula indicada (incluida), en orden del
+ * camino. Sirve para elegir distractores sin usar material aún no visto.
+ */
+export function lettersUpTo(capsuleId: string): Letter[] {
+  const out: Letter[] = []
+  for (const node of path) {
+    out.push(...node.capsule.letters)
+    if (node.capsule.id === capsuleId) break
+  }
+  return out
+}
+
+/**
+ * Vocabulario presentado hasta la cápsula indicada (incluida), en orden del
+ * camino. Sirve para elegir distractores sin usar material aún no visto.
+ */
+export function vocabUpTo(capsuleId: string): VocabEntry[] {
+  const out: VocabEntry[] = []
+  for (const node of path) {
+    out.push(...node.capsule.vocabulary)
+    if (node.capsule.id === capsuleId) break
+  }
+  return out
+}

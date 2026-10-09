@@ -29,7 +29,7 @@ export type PartOfSpeech =
   | 'expresion'
 
 /** Qué tarjetas genera una entrada de vocabulario. */
-export type VocabDirection = 'reconocer' | 'producir'
+export type VocabDirection = 'reconocer' | 'producir' | 'transliterar'
 
 /** Una entrada de vocabulario. `greek` es la forma de cita. */
 export interface VocabEntry {
@@ -48,6 +48,28 @@ export interface VocabEntry {
    * teclearlas letra a letra.
    */
   cards?: VocabDirection[]
+  /**
+   * Etiqueta que se muestra como respuesta correcta en las preguntas de
+   * reconocer de opción múltiple. Por defecto, la primera traducción.
+   */
+  recognitionLabel?: string
+  /**
+   * Distractores editoriales para la pregunta de reconocer: textos del mismo
+   * idioma y categoría. Se usan antes que el vocabulario ya presentado y
+   * evitan mezclar categorías cuando aún no hay alternativas suficientes.
+   */
+  distractors?: string[]
+  /**
+   * Transliteración básica al alfabeto latino. No representa acentos ni
+   * espíritus; conserva correspondencias como θ → th o η → ē. No es la
+   * pronunciación: solo la forma de escribir las letras griegas en latino.
+   */
+  transliteration?: string
+  /**
+   * Distractores editoriales de la pregunta de transliterar: exactamente
+   * tres, distintos entre sí y de la respuesta correcta.
+   */
+  transliterationDistractors?: string[]
 }
 
 /** Un eje de un paradigma (número, caso, persona, tiempo…). */
@@ -82,6 +104,40 @@ export interface Sentence {
   notes?: string
 }
 
+/**
+ * Una letra del alfabeto. Tiene tres aspectos distintos que conviene no
+ * confundir: la forma (mayúscula y minúscula), el nombre y el valor fonético.
+ *
+ * El `id` es monolingüe y estable (p. ej. «alpha», no «alfa»): los
+ * identificadores de las tarjetas derivadas (`l:<id>:rec`, `l:<id>:pro`) deben
+ * sobrevivir a una futura traducción del contenido.
+ */
+export interface Letter {
+  /** Identificador estable y monolingüe de la letra. */
+  id: string
+  uppercase: string
+  lowercase: string
+  /**
+   * Variante contextual de final de palabra (solo sigma: «ς»). Es metadata de
+   * presentación, no una letra nueva: no genera tarjeta propia y no aparece en
+   * los resúmenes ni en el orden alfabético.
+   */
+  finalForm?: string
+  /** Nombre pedagógico de la letra en el idioma del curso. */
+  name: string
+  /** Valor fonético básico, en IPA (p. ej. «/b/»). */
+  phonetic: string
+  /**
+   * Transliteración básica al alfabeto latino (p. ej. θ → th, η → ē). Es la
+   * forma de escribir la letra, distinta del nombre y de la pronunciación.
+   */
+  transliteration: string
+  /** Explicación breve de pronunciación para quien estudia. */
+  pronunciation: string
+  /** Nota opcional: variantes futuras, cantidad, reconstrucción… */
+  note?: string
+}
+
 /** Nota de gramática que se puede consultar desde la cápsula. */
 export interface GrammarNote {
   id: string
@@ -90,9 +146,10 @@ export interface GrammarNote {
 }
 
 /**
- * Un nodo del camino: el material que se practica de una vez. Al dominarla
- * abre la siguiente, pero su vocabulario sigue apareciendo mezclado en las
- * cápsulas posteriores mientras el algoritmo lo pida.
+ * Un nodo del camino: el material que se practica de una vez. Al completarla
+ * —responder una vez todas sus tarjetas— abre la siguiente, pero su
+ * vocabulario sigue apareciendo mezclado en las cápsulas posteriores
+ * mientras el algoritmo lo pida.
  */
 export interface Capsule {
   id: string
@@ -100,10 +157,14 @@ export interface Capsule {
   number: number
   /** Opcional: se le pone nombre cuando la cápsula está terminada. */
   title?: string
+  /** Letras nuevas de la cápsula. Cada una genera exactamente dos tarjetas: reconocer y producir. */
+  letters: Letter[]
   vocabulary: VocabEntry[]
   paradigms: Paradigm[]
   sentences: Sentence[]
   grammar: GrammarNote[]
+  /** Notas breves de la cápsula (cultura, avisos…), consultables antes de practicar. */
+  notes?: string[]
   /**
    * Tablas completas para el repaso consolidado: a diferencia de `paradigms`
    * (que reparte una tarjeta por celda), cada tabla aquí genera una única
@@ -139,12 +200,18 @@ export type CardKind =
   | 'vocab-reconocer'
   /** Ver el español, producir el griego. */
   | 'vocab-producir'
+  /** Ver el griego y elegir su escritura con el alfabeto latino. */
+  | 'vocab-transliterar'
   /** Dada una celda del paradigma, escribir la forma. */
   | 'morfologia'
   /** Traducir una frase. */
   | 'traduccion'
   /** Rellenar de memoria las celdas al azar de una tabla ya vista entera. */
   | 'tabla'
+  /** Ver la forma (mayúscula o minúscula) y reconocer el nombre de la letra. */
+  | 'letra-reconocer'
+  /** Ver el nombre de la letra y elegir su forma entre opciones. */
+  | 'letra-producir'
 
 /** Cómo se le presenta al usuario una tarjeta en una sesión concreta. */
 export type ExerciseMode = 'opcion-multiple' | 'flashcard' | 'escribir' | 'traducir' | 'huecos'
@@ -226,7 +293,7 @@ export interface Settings {
   mixRatio: number
   /** Exigir acentos y espíritus en las respuestas escritas. */
   strictDiacritics: boolean
-  /** % de dominio de una cápsula necesario para abrir la siguiente. */
+  /** Obsoleto: el desbloqueo ahora depende de completar la cápsula. Se conserva por compatibilidad con ajustes guardados. */
   unlockThreshold: number
   /** Mostrar el teclado griego en pantalla. */
   showKeyboard: boolean

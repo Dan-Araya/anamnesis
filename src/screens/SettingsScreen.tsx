@@ -95,25 +95,6 @@ export default function SettingsScreen() {
             onChange={(e) => void updateSettings({ mixRatio: clamp(e.target.value, 0, 80) / 100 })}
           />
         </div>
-
-        <div className="campo">
-          <div>
-            <div className="campo__label">Dominio para desbloquear</div>
-            <div className="muted small">
-              Porcentaje del módulo necesario para abrir el siguiente.
-            </div>
-          </div>
-          <input
-            type="number"
-            min={10}
-            max={100}
-            step={5}
-            value={Math.round(settings.unlockThreshold * 100)}
-            onChange={(e) =>
-              void updateSettings({ unlockThreshold: clamp(e.target.value, 10, 100) / 100 })
-            }
-          />
-        </div>
       </div>
 
       <div className="card">
@@ -140,8 +121,9 @@ export default function SettingsScreen() {
       <div className="card">
         <strong>Copia de seguridad</strong>
         <p className="muted small">
-          El progreso vive solo en este dispositivo. Exporta de vez en cuando si no quieres
-          perderlo al cambiar de móvil o limpiar los datos del navegador.
+          La copia principal vive en este dispositivo. Exporta de vez en cuando —o guarda
+          una copia privada en tu cuenta— para no perderla al cambiar de móvil o limpiar los
+          datos del navegador.
         </p>
         <div className="stack">
           <button type="button" className="btn btn--wide" onClick={() => void exportar()}>
@@ -184,7 +166,7 @@ export default function SettingsScreen() {
         <strong>Añadir contenido</strong>
         <p className="muted small" style={{ marginBottom: 0 }}>
           Cada módulo es un archivo JSON en <code>src/content/modules/</code>. Copia{' '}
-          <code>module-03.json</code>, cámbiale el número y rellena vocabulario, paradigmas y
+          <code>plantilla.json</code>, cámbiale el número y rellena vocabulario, paradigmas y
           frases. Al publicar de nuevo la app, el contenido nuevo aparece sin tocar tu
           progreso.
         </p>

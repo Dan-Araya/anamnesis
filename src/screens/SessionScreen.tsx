@@ -2,71 +2,102 @@ import { useMemo, useRef, useState } from 'react'
 import type { Grade } from '@/types'
 import { useStore } from '@/store'
 import { buildSession, pickMode, type SessionItem } from '@/lib/session'
+import {
+  advance,
+  createRun,
+  currentItem,
+  failedCount,
+  phaseOf,
+  type SessionRun,
+} from '@/lib/session-run'
 import MultipleChoice from '@/components/exercises/MultipleChoice'
 import Flashcard from '@/components/exercises/Flashcard'
 import TypeAnswer from '@/components/exercises/TypeAnswer'
 import Translate from '@/components/exercises/Translate'
 import TableDrill from '@/components/exercises/TableDrill'
-
-/** Cuántas veces como mucho puede reaparecer una tarjeta en la misma sesión. */
-const MAX_REPETICIONES = 4
+import LetterRecognition from '@/components/exercises/LetterRecognition'
+import LetterProduction from '@/components/exercises/LetterProduction'
+import VocabTransliterate from '@/components/exercises/VocabTransliterate'
 
 /**
- * Una sesión de práctica: una cola de tarjetas que se va consumiendo.
+ * Una sesión de práctica en dos fases. La cola principal queda fija al
+ * comenzar: cada tarjeta aparece una sola vez y el contador nunca cambia de
+ * denominador. Al terminarla, las tarjetas falladas —hasta tres distintas—
+ * reaparecen una única vez en una fase de refuerzo separada; las demás
+ * falladas quedan programadas por el SRS para cápsulas posteriores.
  *
- * Una tarjeta vuelve a la cola mientras siga en aprendizaje, no solo cuando se
- * falla: así el material nuevo se ve un par de veces antes de terminar y llega
- * a graduarse, en lugar de darse por sabido a la primera.
+ * Con `freePractice` (el botón «Repasar cápsula») la sesión es práctica libre:
+ * nada se persiste —ni CardProgress, ni ReviewLog, ni DailyStat— y solo se
+ * mantienen contadores locales para el resumen. El refuerzo también es local.
  */
 export default function SessionScreen({
   capsuleId,
   onlyReviews,
+  freePractice,
   onExit,
   onOpenMaterial,
 }: {
   capsuleId?: string
   onlyReviews?: boolean
+  /** Práctica libre iniciada con «Repasar cápsula»: no persiste respuestas. */
+  freePractice?: boolean
   onExit: () => void
   onOpenMaterial?: (capsuleId: string) => void
 }) {
   const { settings, progress, statuses, today, review } = useStore()
 
+  // La práctica libre es la única vía para que las tarjetas de una cápsula
+  // completada entren aunque nada esté vencido.
+  const practicaLibre = Boolean(freePractice)
+
   // La cola se fija al entrar: que no se reordene sola mientras respondes.
-  const [queue, setQueue] = useState<SessionItem[]>(() =>
-    buildSession(progress, settings, statuses, {
-      capsuleId,
-      onlyReviews,
-      newToday: today.newCards,
-    }),
+  const [run, setRun] = useState<SessionRun>(() =>
+    createRun(
+      buildSession(progress, settings, statuses, {
+        capsuleId,
+        onlyReviews,
+        newToday: today.newCards,
+        reviewCapsule: practicaLibre,
+      }),
+    ),
   )
-  const [index, setIndex] = useState(0)
   const [answered, setAnswered] = useState({ total: 0, correct: 0 })
-  const repeticiones = useRef(new Map<string, number>())
   const startedAt = useRef(Date.now())
   const shownAt = useRef(Date.now())
 
-  const item = queue[index]
+  const item = currentItem(run)
+  const phase = phaseOf(run)
 
   const handleGraded = async (grade: Grade) => {
     if (!item) return
     const durationMs = Date.now() - shownAt.current
     shownAt.current = Date.now()
+    const correct = grade > 1
+    setAnswered((a) => ({
+      total: a.total + 1,
+      correct: a.correct + (correct ? 1 : 0),
+    }))
 
-    const next = await review({ card: item.card, grade, mode: item.mode, durationMs })
-    setAnswered((a) => ({ total: a.total + 1, correct: a.correct + (grade > 1 ? 1 : 0) }))
-
-    const vistas = repeticiones.current.get(item.card.id) ?? 1
-    const sinAsentar = next.state === 'aprendiendo' || next.state === 'reaprendiendo'
-
-    if (sinAsentar && vistas < MAX_REPETICIONES) {
-      repeticiones.current.set(item.card.id, vistas + 1)
-      setQueue((q) => [
-        ...q,
-        { card: item.card, progress: next, mode: pickMode(item.card, next), isNew: false },
-      ])
+    // Práctica libre: la respuesta solo alimenta los contadores locales. No
+    // se llama a `review`, no se ejecuta `schedule` y no se toca la base de
+    // datos, así que reps, streak, lastReview, due, interval, ease, lapses,
+    // state, el historial y las estadísticas diarias quedan exactamente igual.
+    if (practicaLibre) {
+      setRun((r) => advance(r, grade, { ...item, isNew: false }))
+      return
     }
 
-    setIndex((i) => i + 1)
+    // Sesión normal: la respuesta principal se persiste; la del refuerzo
+    // también, para que el SRS programe cuándo vuelve cada tarjeta.
+    const next = await review({ card: item.card, grade, mode: item.mode, durationMs })
+    setRun((r) =>
+      advance(r, grade, {
+        card: item.card,
+        progress: next,
+        mode: pickMode(item.card, next),
+        isNew: false,
+      }),
+    )
   }
 
   if (!item) {
@@ -74,16 +105,20 @@ export default function SessionScreen({
       <Resumen
         answered={answered}
         durationMs={Date.now() - startedAt.current}
-        empty={queue.length === 0}
+        empty={run.main.length === 0}
         capsuleId={capsuleId}
+        failed={failedCount(run)}
+        practicaLibre={practicaLibre}
         onExit={onExit}
         onOpenMaterial={onOpenMaterial}
       />
     )
   }
 
-  const done = Math.min(index, queue.length)
-  const pct = Math.round((done / queue.length) * 100)
+  const enPrincipal = phase === 'principal'
+  const done = enPrincipal ? run.mainIndex : run.reinforcementIndex
+  const total = enPrincipal ? run.main.length : run.reinforcement.length
+  const pct = total ? Math.round((done / total) * 100) : 100
 
   return (
     <div className="session">
@@ -95,12 +130,18 @@ export default function SessionScreen({
           <div className="bar__fill" style={{ width: `${pct}%` }} />
         </div>
         <span className="small muted">
-          {done}/{queue.length}
+          {enPrincipal
+            ? `${done}/${total}`
+            : `Refuerzo ${Math.min(done + 1, total)}/${total}`}
         </span>
       </div>
 
       <div className="session__body">
-        <Ejercicio key={`${item.card.id}:${index}`} item={item} onGraded={handleGraded} />
+        <Ejercicio
+          key={`${item.card.id}:${phase}:${enPrincipal ? run.mainIndex : run.reinforcementIndex}`}
+          item={item}
+          onGraded={handleGraded}
+        />
       </div>
     </div>
   )
@@ -114,6 +155,16 @@ function Ejercicio({
   onGraded: (grade: Grade) => void
 }) {
   const { settings } = useStore()
+
+  if (item.card.kind === 'letra-reconocer') {
+    return <LetterRecognition item={item} onGraded={onGraded} />
+  }
+  if (item.card.kind === 'letra-producir') {
+    return <LetterProduction item={item} onGraded={onGraded} />
+  }
+  if (item.card.kind === 'vocab-transliterar') {
+    return <VocabTransliterate item={item} onGraded={onGraded} />
+  }
 
   switch (item.mode) {
     case 'opcion-multiple':
@@ -134,6 +185,8 @@ function Resumen({
   durationMs,
   empty,
   capsuleId,
+  failed,
+  practicaLibre,
   onExit,
   onOpenMaterial,
 }: {
@@ -141,6 +194,9 @@ function Resumen({
   durationMs: number
   empty: boolean
   capsuleId?: string
+  /** Tarjetas distintas falladas, no el total bruto de respuestas erróneas. */
+  failed: number
+  practicaLibre: boolean
   onExit: () => void
   onOpenMaterial?: (capsuleId: string) => void
 }) {
@@ -151,10 +207,17 @@ function Resumen({
 
   const mensaje = useMemo(() => {
     if (empty) return 'No hay nada pendiente ahora mismo.'
+    if (failed > 0) {
+      // No punitivo: los errores no desmarcan la cápsula; el SRS los traerá
+      // de vuelta más adelante.
+      return practicaLibre
+        ? `Repaso terminado. ${failed} ${failed === 1 ? 'elemento necesita más práctica' : 'elementos necesitan más práctica'}.`
+        : `Terminaste la cápsula. ${failed} ${failed === 1 ? 'elemento volverá' : 'elementos volverán'} más adelante.`
+    }
     if (accuracy >= 90) return '¡Excelente!'
     if (accuracy >= 70) return 'Buen trabajo.'
-    return 'Sesión terminada. Lo fallado vuelve pronto.'
-  }, [accuracy, empty])
+    return 'Sesión terminada.'
+  }, [accuracy, empty, failed, practicaLibre])
 
   return (
     <div className="screen screen--full">

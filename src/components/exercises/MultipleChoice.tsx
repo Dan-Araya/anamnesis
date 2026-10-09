@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
-import type { Grade, VocabEntry } from '@/types'
+import type { Grade } from '@/types'
 import { getVocab } from '@/content'
-import { distractors, shuffle, type SessionItem } from '@/lib/session'
+import { shuffle, vocabDistractors, type SessionItem } from '@/lib/session'
 
 /**
- * Elegir entre cuatro. Es el formato de entrada: se usa mientras la palabra
- * es nueva y se abandona en cuanto se asienta.
+ * Elegir entre cuatro. Pregunta objetiva: la respuesta no se autoevalúa, se
+ * elige entre alternativas.
  */
 export default function MultipleChoice({
   item,
@@ -19,16 +19,16 @@ export default function MultipleChoice({
   const showGreek = item.card.kind === 'vocab-reconocer'
   const [picked, setPicked] = useState<string | null>(null)
 
-  const label = (v: VocabEntry) => (showGreek ? v.es[0]! : v.greek)
+  const targetLabel = vocab
+    ? showGreek
+      ? (vocab.recognitionLabel ?? vocab.es[0]!)
+      : vocab.greek
+    : ''
 
   const options = useMemo(() => {
     if (!vocab) return []
-    const target = label(vocab)
-    const pool = distractors(vocab, item.card.capsuleId, 8)
-      // Descarta alternativas que dirían lo mismo que la respuesta correcta.
-      .filter((v) => label(v) !== target)
-      .slice(0, 3)
-    return shuffle([vocab, ...pool])
+    const pool = vocabDistractors(vocab, item.card.capsuleId, showGreek, 8).slice(0, 3)
+    return shuffle([{ id: vocab.id, label: targetLabel }, ...pool])
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item.card.id])
 
@@ -71,7 +71,7 @@ export default function MultipleChoice({
               disabled={answered}
               onClick={() => setPicked(option.id)}
             >
-              {label(option)}
+              {option.label}
             </button>
           )
         })}

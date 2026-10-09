@@ -1,95 +1,469 @@
 {
   "id": "module-01",
   "number": 1,
+  "title": "Leer el alfabeto",
   "sections": [
     {
       "id": "m01-s01",
       "number": 1,
+      "title": "El alfabeto",
       "capsules": [
         {
           "id": "m01-s01-c01",
           "number": 1,
-          "vocabulary": [
+          "title": "Alfa, beta y gamma",
+          "letters": [
             {
-              "id": "m01-s01-de",
-              "greek": "δέ",
-              "es": ["y", "pero"],
-              "pos": "particula",
-              "notes": "Pospositiva: nunca abre la frase, va en segunda posición."
+              "id": "alpha",
+              "uppercase": "Α",
+              "lowercase": "α",
+              "name": "alfa",
+              "phonetic": "/a/",
+              "transliteration": "a",
+              "pronunciation": "Su valor básico es /a/. Para empezar puedes compararla con la «a» española de «casa», sin dar por hecho que toda alfa antigua sonase exactamente igual.",
+              "note": "El griego distinguía una alfa larga de una breve; la cantidad vocálica se explicará más adelante."
             },
             {
-              "id": "m01-s01-epeita",
-              "greek": "ἔπειτα",
-              "es": ["luego", "después", "a continuación"],
-              "pos": "adverbio"
+              "id": "beta",
+              "uppercase": "Β",
+              "lowercase": "β",
+              "name": "beta",
+              "phonetic": "/b/",
+              "transliteration": "b",
+              "pronunciation": "Valor ático reconstruido: /b/, una oclusiva como la b de «barco». Evita pronunciarla como una v."
             },
             {
-              "id": "m01-s01-kai",
-              "greek": "καί",
-              "es": ["y", "también"],
-              "pos": "conjuncion"
-            },
-            {
-              "id": "m01-s01-te-kai",
-              "greek": "τε … καί",
-              "es": ["tanto A como B", "tanto… como…"],
-              "pos": "expresion",
-              "cards": ["reconocer"],
-              "notes": "τε es enclítica y pospositiva: se coloca detrás del primer elemento."
+              "id": "gamma",
+              "uppercase": "Γ",
+              "lowercase": "γ",
+              "name": "gamma",
+              "phonetic": "/g/",
+              "transliteration": "g",
+              "pronunciation": "Su valor básico es /g/, como la g de «gato».",
+              "note": "Más adelante verás que ante ciertas consonantes la gamma tiene comportamientos especiales."
             }
           ],
+          "vocabulary": [],
           "paradigms": [],
           "sentences": [],
           "grammar": [],
-          "drills": []
+          "drills": [],
+          "notes": [
+            "«Alfabeto» reúne los nombres de sus dos primeras letras: alfa y beta.",
+            "Cada letra tiene tres aspectos que conviene no confundir: la forma, el nombre y el sonido. Una cosa es el nombre «alfa» y otra el valor /a/ que representa."
+          ]
         },
         {
           "id": "m01-s01-c02",
           "number": 2,
+          "title": "Delta, épsilon y dseta",
+          "letters": [
+            {
+              "id": "delta",
+              "uppercase": "Δ",
+              "lowercase": "δ",
+              "name": "delta",
+              "phonetic": "/d/",
+              "transliteration": "d",
+              "pronunciation": "Valor ático reconstruido: /d/ oclusiva, como una d claramente articulada, la de «dado»."
+            },
+            {
+              "id": "epsilon",
+              "uppercase": "Ε",
+              "lowercase": "ε",
+              "name": "épsilon",
+              "phonetic": "/e/",
+              "transliteration": "e",
+              "pronunciation": "Su valor básico es /e/ breve, como la e de «eco». Su nombre la distingue de otras formas históricas de representar sonidos de e; la cantidad y los contrastes vocálicos se profundizarán después."
+            },
+            {
+              "id": "zeta",
+              "uppercase": "Ζ",
+              "lowercase": "ζ",
+              "name": "dseta",
+              "phonetic": "/dz/",
+              "transliteration": "z",
+              "pronunciation": "En este curso pronunciamos dseta como /dz/: una africada sonora que empieza como d y termina con una s sonora. Su reconstrucción histórica se discute; aquí adoptamos /dz/, habitual en la enseñanza en español, como modelo pedagógico."
+            }
+          ],
           "vocabulary": [
             {
-              "id": "m01-s01-ara",
-              "greek": "ἆρα",
-              "es": ["¿acaso?", "¿...?"],
+              "id": "de",
+              "greek": "δέ",
+              "es": ["y", "pero", "por otra parte"],
               "pos": "particula",
-              "notes": "Partícula interrogativa: marca la frase como pregunta. A menudo no se traduce con una palabra, solo con la entonación."
-            },
-            {
-              "id": "m01-s01-tis",
-              "greek": "τίς",
-              "es": ["¿quién?"],
-              "pos": "pronombre"
-            },
-            {
-              "id": "m01-s01-o",
-              "greek": "ὦ",
-              "es": ["oh"],
-              "pos": "interjeccion",
-              "notes": "Acompaña al vocativo. En español suele omitirse: ὦ Σώκρατες = «Sócrates»."
-            },
-            {
-              "id": "m01-s01-deuro",
-              "greek": "δεῦρο",
-              "es": ["ven aquí", "hacia aquí"],
-              "pos": "adverbio"
-            },
-            {
-              "id": "m01-s01-su",
-              "greek": "σύ",
-              "es": ["tú"],
-              "pos": "pronombre"
-            },
-            {
-              "id": "m01-s01-ego",
-              "greek": "ἐγώ",
-              "es": ["yo"],
-              "pos": "pronombre"
+              "cards": ["reconocer", "transliterar"],
+              "recognitionLabel": "y / pero / por otra parte",
+              "distractors": ["sí", "no", "aquí"],
+              "transliteration": "de",
+              "transliterationDistractors": ["dē", "ze", "da"],
+              "notes": "Partícula pospositiva: normalmente no ocupa el primer lugar de su grupo, aunque la traducción española pueda empezar por «pero» o «y». En esta sección solo se practica su reconocimiento."
             }
           ],
           "paradigms": [],
           "sentences": [],
           "grammar": [],
-          "drills": []
+          "drills": [],
+          "notes": [
+            "Fíjate en la marca sobre la ε de δέ: es un acento. Los acentos y demás signos se estudiarán más adelante; por ahora solo hay que reconocer la palabra."
+          ]
+        },
+        {
+          "id": "m01-s01-c03",
+          "number": 3,
+          "title": "Eta, theta e iota",
+          "letters": [
+            {
+              "id": "eta",
+              "uppercase": "Η",
+              "lowercase": "η",
+              "name": "eta",
+              "phonetic": "/ɛː/",
+              "transliteration": "ē",
+              "pronunciation": "En la pronunciación ática reconstruida representa una e abierta y larga. Para empezar, piensa en una «e» sostenida algo más que la épsilon.",
+              "note": "La eta permite distinguir una vocal larga de la épsilon breve. La cantidad vocálica se estudiará con más detalle después."
+            },
+            {
+              "id": "theta",
+              "uppercase": "Θ",
+              "lowercase": "θ",
+              "name": "theta",
+              "phonetic": "/tʰ/",
+              "transliteration": "th",
+              "pronunciation": "En ático reconstruido es una t aspirada: se pronuncia una «t» seguida de una pequeña salida de aire.",
+              "note": "No corresponde a la z del español peninsular ni al sonido inglés de «think». Su pronunciación fricativa pertenece a etapas posteriores del griego."
+            },
+            {
+              "id": "iota",
+              "uppercase": "Ι",
+              "lowercase": "ι",
+              "name": "iota",
+              "phonetic": "/i/",
+              "transliteration": "i",
+              "pronunciation": "Su valor básico es /i/, comparable con la i española de «isla».",
+              "note": "La iota podía ser breve o larga. Esa diferencia y la llamada iota suscrita se explicarán más adelante."
+            }
+          ],
+          "vocabulary": [
+            {
+              "id": "thea",
+              "greek": "θεά",
+              "es": ["diosa"],
+              "pos": "sustantivo",
+              "cards": ["reconocer", "transliterar"],
+              "recognitionLabel": "diosa",
+              "distractors": ["mujer", "templo", "ciudad"],
+              "transliteration": "thea",
+              "transliterationDistractors": ["tea", "thēa", "zea"],
+              "notes": "θεά significa «diosa». Pertenece a la misma familia que θεός, de la que procede el elemento teo- de palabras como «teología». El acento visible se estudiará después; por ahora solo se reconoce la palabra."
+            }
+          ],
+          "paradigms": [],
+          "sentences": [],
+          "grammar": [],
+          "drills": [],
+          "notes": [
+            "La theta representa una consonante aspirada: una t con una pequeña salida de aire, no la fricativa que tiene en pronunciaciones modernas.",
+            "El acento de θεά se ve en la palabra, pero todavía no se evalúa: por ahora solo se reconoce la palabra completa."
+          ]
+        },
+        {
+          "id": "m01-s01-c04",
+          "number": 4,
+          "title": "Kappa, lambda y mi",
+          "letters": [
+            {
+              "id": "kappa",
+              "uppercase": "Κ",
+              "lowercase": "κ",
+              "name": "kappa",
+              "phonetic": "/k/",
+              "transliteration": "k",
+              "pronunciation": "Su valor es /k/, como la c de «casa» o la k de «kilo».",
+              "note": "La kappa mantiene este valor ante cualquier vocal; no alterna como la c española."
+            },
+            {
+              "id": "lambda",
+              "uppercase": "Λ",
+              "lowercase": "λ",
+              "name": "lambda",
+              "phonetic": "/l/",
+              "transliteration": "l",
+              "pronunciation": "Su valor básico es /l/, semejante a la l española.",
+              "note": "Su nombre aparece hoy en ámbitos como la lingüística, la física y las matemáticas, donde Λ y λ conservan numerosos usos técnicos."
+            },
+            {
+              "id": "mu",
+              "uppercase": "Μ",
+              "lowercase": "μ",
+              "name": "mi",
+              "phonetic": "/m/",
+              "transliteration": "m",
+              "pronunciation": "Su valor es /m/, como la m española de «mano».",
+              "note": "La forma minúscula μ se emplea actualmente como símbolo del prefijo micro- en el sistema internacional."
+            }
+          ],
+          "vocabulary": [
+            {
+              "id": "klima",
+              "greek": "κλῖμα",
+              "es": ["inclinación", "pendiente", "región"],
+              "pos": "sustantivo",
+              "cards": ["reconocer", "transliterar"],
+              "recognitionLabel": "inclinación / región",
+              "distractors": ["ley", "cuerpo", "camino"],
+              "transliteration": "klima",
+              "transliterationDistractors": ["clima", "kilma", "glima"],
+              "notes": "κλῖμα significaba originalmente «inclinación» o «pendiente» y también llegó a designar una región según su inclinación respecto del sol. De esta palabra procede «clima». El circunflejo se estudiará más adelante y no se evalúa todavía."
+            }
+          ],
+          "paradigms": [],
+          "sentences": [],
+          "grammar": [],
+          "drills": [],
+          "notes": [
+            "κλῖμα pasó de «inclinación» o «pendiente» a designar una región según su inclinación respecto del sol; de ahí procede el español «clima».",
+            "La marca sobre la iota de κλῖμα es un circunflejo. El sistema de acentuación se estudiará más adelante; por ahora la palabra solo se reconoce."
+          ]
+        },
+        {
+          "id": "m01-s01-c05",
+          "number": 5,
+          "title": "Ni, xi y ómicron",
+          "letters": [
+            {
+              "id": "nu",
+              "uppercase": "Ν",
+              "lowercase": "ν",
+              "name": "ni",
+              "phonetic": "/n/",
+              "transliteration": "n",
+              "pronunciation": "Representa /n/, comparable con la n española de «noche».",
+              "note": "La minúscula ν puede recordar visualmente una «v» latina, pero su sonido es /n/: evita pronunciarla como una v."
+            },
+            {
+              "id": "xi",
+              "uppercase": "Ξ",
+              "lowercase": "ξ",
+              "name": "xi",
+              "phonetic": "/ks/",
+              "transliteration": "x",
+              "pronunciation": "Representa la secuencia /ks/, comparable con la pronunciación cuidada de la x en «taxi».",
+              "note": "La transliteración «x» y el sonido /ks/ están relacionados, pero no son idénticos como conceptos: la primera es una letra latina y el segundo es el sonido."
+            },
+            {
+              "id": "omicron",
+              "uppercase": "Ο",
+              "lowercase": "ο",
+              "name": "ómicron",
+              "phonetic": "/o/",
+              "transliteration": "o",
+              "pronunciation": "Es una o breve en el modelo ático reconstruido, comparable con la o de «oso».",
+              "note": "Su nombre significa tradicionalmente «o pequeña»: anticipa el contraste con omega, que se verá más adelante."
+            }
+          ],
+          "vocabulary": [
+            {
+              "id": "onoma",
+              "greek": "ὄνομα",
+              "es": ["nombre"],
+              "pos": "sustantivo",
+              "cards": ["reconocer", "transliterar"],
+              "recognitionLabel": "nombre",
+              "distractors": ["memoria", "número", "imagen"],
+              "transliteration": "onoma",
+              "transliterationDistractors": ["omona", "onema", "anoma"],
+              "notes": "ὄνομα significa «nombre». Pertenece a la familia léxica griega visible en «onomástica» y en formaciones como «anónimo» y «sinónimo»; no todas esas palabras proceden directamente de la forma exacta ὄνομα. Las marcas sobre la primera ómicron son signos que se estudiarán más adelante y aquí no se califican. Transliterar (onoma) no es lo mismo que pronunciar."
+            }
+          ],
+          "paradigms": [],
+          "sentences": [],
+          "grammar": [],
+          "drills": [],
+          "notes": [
+            "ὄνομα significa «nombre»: de su familia léxica griega salen «onomástica» y formaciones como «anónimo» y «sinónimo». No todas proceden directamente de la forma exacta ὄνομα.",
+            "Las marcas sobre la primera ómicron de ὄνομα son signos que se estudiarán más adelante; aquí no se califican.",
+            "Transliterar no es lo mismo que pronunciar: «onoma» solo escribe las letras griegas con el alfabeto latino."
+          ]
+        },
+        {
+          "id": "m01-s01-c06",
+          "number": 6,
+          "title": "Pi, rho y sigma",
+          "letters": [
+            {
+              "id": "pi",
+              "uppercase": "Π",
+              "lowercase": "π",
+              "name": "pi",
+              "phonetic": "/p/",
+              "transliteration": "p",
+              "pronunciation": "Representa /p/, comparable con la p española de «pan».",
+              "note": "Más adelante se distinguirá de phi, la consonante aspirada correspondiente."
+            },
+            {
+              "id": "rho",
+              "uppercase": "Ρ",
+              "lowercase": "ρ",
+              "name": "rho",
+              "phonetic": "/r/",
+              "transliteration": "r",
+              "pronunciation": "Representa una r vibrante, como la de «perro».",
+              "note": "La mayúscula Ρ se parece a una P latina, pero representa /r/. El espíritu áspero de la rho inicial se estudiará en la sección de signos y no se evalúa aquí."
+            },
+            {
+              "id": "sigma",
+              "uppercase": "Σ",
+              "lowercase": "σ",
+              "finalForm": "ς",
+              "name": "sigma",
+              "phonetic": "/s/",
+              "transliteration": "s",
+              "pronunciation": "σ se usa normalmente dentro de una palabra y ς al final. La ς es una variante contextual de sigma, no una letra adicional: ambas representan /s/, como la s de «sol»."
+            }
+          ],
+          "vocabulary": [
+            {
+              "id": "poiesis",
+              "greek": "ποίησις",
+              "es": ["creación", "producción"],
+              "pos": "sustantivo",
+              "cards": ["reconocer", "transliterar"],
+              "recognitionLabel": "creación / producción",
+              "distractors": ["destrucción", "memoria", "movimiento"],
+              "transliteration": "poiēsis",
+              "transliterationDistractors": ["poiesis", "poiēzis", "boiēsis"],
+              "notes": "ποίησις significa «creación» o «producción», y también se empleó para la creación o composición poética. De la misma familia léxica griega salen «poesía» y «poema»; la transliteración poiēsis no es una pronunciación española. Observa la σ medial y la ς final: son la misma letra. El acento se muestra, pero no se explica ni se evalúa todavía."
+            }
+          ],
+          "paradigms": [],
+          "sentences": [],
+          "grammar": [],
+          "drills": [],
+          "notes": [
+            "ποίησις significa «creación» o «producción» y también se empleó para la creación o composición poética: de la misma familia léxica griega salen «poesía» y «poema».",
+            "Fíjate en la σ de dentro de la palabra y la ς del final: son la misma letra, sigma. La transliteración poiēsis no es una pronunciación española.",
+            "El acento de ποίησις se muestra, pero no se explica ni se evalúa todavía."
+          ]
+        },
+        {
+          "id": "m01-s01-c07",
+          "number": 7,
+          "title": "Tau, upsilon y phi",
+          "letters": [
+            {
+              "id": "tau",
+              "uppercase": "Τ",
+              "lowercase": "τ",
+              "name": "tau",
+              "phonetic": "/t/",
+              "transliteration": "t",
+              "pronunciation": "En el ático reconstruido representa /t/, una t no aspirada: para empezar puedes compararla con la t española de «toro».",
+              "note": "Frente a theta /tʰ/, que añade una salida perceptible de aire, tau no la añade: compáralas cuando las repases."
+            },
+            {
+              "id": "upsilon",
+              "uppercase": "Υ",
+              "lowercase": "υ",
+              "name": "upsilon",
+              "phonetic": "/y/",
+              "transliteration": "y",
+              "pronunciation": "Su valor es /y/, una vocal anterior redondeada sin equivalente exacto en español: aproxímala colocando la lengua para decir «i» y redondeando los labios como para «u». No la identifiques con la u española ni con una consonante y.",
+              "note": "La upsilon podía ser breve o larga; la cantidad se profundizará después. En la transliteración básica del curso se representa con y."
+            },
+            {
+              "id": "phi",
+              "uppercase": "Φ",
+              "lowercase": "φ",
+              "name": "phi",
+              "phonetic": "/pʰ/",
+              "transliteration": "ph",
+              "pronunciation": "En el ático clásico reconstruido es una p aspirada: una «p» seguida de una pequeña salida de aire. Compárala con pi /p/, que no añade esa salida.",
+              "note": "No se pronuncia todavía /f/ en el modelo histórico elegido: esa pronunciación pertenece a etapas posteriores del griego."
+            }
+          ],
+          "vocabulary": [
+            {
+              "id": "mythos",
+              "greek": "μῦθος",
+              "es": ["relato", "narración", "mito"],
+              "pos": "sustantivo",
+              "cards": ["reconocer", "transliterar"],
+              "recognitionLabel": "relato / mito",
+              "distractors": ["ley", "cuerpo", "camino"],
+              "transliteration": "mythos",
+              "transliterationDistractors": ["mithos", "mytos", "nythos"],
+              "notes": "μῦθος tuvo sentidos como «palabra», «discurso», «relato» o «narración», y de esta familia procede nuestra palabra «mito». No reduzcas su historia semántica al concepto moderno de «mito falso»: la y de mythos translitera la upsilon, no representa la consonante y española, y el circunflejo visible sobre la upsilon no se explica ni se evalúa todavía."
+            }
+          ],
+          "paradigms": [],
+          "sentences": [],
+          "grammar": [],
+          "drills": [],
+          "notes": [
+            "μῦθος tuvo sentidos como «palabra», «discurso», «relato» o «narración» y de esta familia procede nuestra palabra «mito».",
+            "La y de mythos translitera la upsilon; no representa la consonante y española. Transliterar y pronunciar no son lo mismo.",
+            "El circunflejo visible sobre la upsilon de μῦθος no se explica ni se evalúa todavía."
+          ]
+        },
+        {
+          "id": "m01-s01-c08",
+          "number": 8,
+          "title": "Chi, psi y omega",
+          "letters": [
+            {
+              "id": "chi",
+              "uppercase": "Χ",
+              "lowercase": "χ",
+              "name": "chi",
+              "phonetic": "/kʰ/",
+              "transliteration": "ch",
+              "pronunciation": "En ático reconstruido es una k aspirada: una «k» seguida de una pequeña salida de aire. Compárala con kappa /k/, que no añade esa salida.",
+              "note": "No es la «ch» ni la jota españolas: esos valores no corresponden al modelo ático reconstruido elegido."
+            },
+            {
+              "id": "psi",
+              "uppercase": "Ψ",
+              "lowercase": "ψ",
+              "name": "psi",
+              "phonetic": "/ps/",
+              "transliteration": "ps",
+              "pronunciation": "Representa la secuencia /ps/, la misma de la escritura de «psique» y «psicología», aunque en el habla española algunas personas relajen u omitan la p inicial. En este curso se conserva y practica la secuencia /ps/."
+            },
+            {
+              "id": "omega",
+              "uppercase": "Ω",
+              "lowercase": "ω",
+              "name": "omega",
+              "phonetic": "/ɔː/",
+              "transliteration": "ō",
+              "pronunciation": "En el modelo ático reconstruido representa una o larga y más abierta: compárala con la ómicron breve /o/.",
+              "note": "Su nombre se entiende tradicionalmente como «o grande», frente a ómicron, «o pequeña». La diferencia de cantidad vocálica se profundizará en la sección de signos."
+            }
+          ],
+          "vocabulary": [
+            {
+              "id": "psyche",
+              "greek": "ψυχή",
+              "es": ["alma", "vida", "aliento vital"],
+              "pos": "sustantivo",
+              "cards": ["reconocer", "transliterar"],
+              "recognitionLabel": "alma / vida",
+              "distractors": ["cuerpo", "ciudad", "destino"],
+              "transliteration": "psychē",
+              "transliterationDistractors": ["psyche", "psichē", "pychē"],
+              "notes": "ψυχή puede significar «vida», «aliento vital» o «alma» según el contexto; de ella proceden «psique» y el elemento psico- de «psicología», sin que esos conceptos modernos equivalgan exactamente al campo semántico antiguo. La palabra reúne psi, upsilon, chi y eta. psychē es transliteración, no pronunciación española, y el acento visible se estudiará después."
+            }
+          ],
+          "paradigms": [],
+          "sentences": [],
+          "grammar": [],
+          "drills": [],
+          "notes": [
+            "ψυχή puede significar «vida», «aliento vital» o «alma» según el contexto: de ella proceden «psique» y el elemento psico- de «psicología».",
+            "La palabra ψυχή reúne psi, upsilon, chi y eta.",
+            "psychē es transliteración, no pronunciación española. El acento visible se estudiará después y no se evalúa todavía."
+          ]
         }
       ]
     }

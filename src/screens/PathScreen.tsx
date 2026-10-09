@@ -3,11 +3,13 @@ import type { ModuleContent } from '@/types'
 import type { CapsuleStatus } from '@/lib/session'
 import { useStore } from '@/store'
 import { currentCapsule } from '@/lib/session'
+import { capsuleAccessibleName } from '@/content'
+import CapsuleGreekLine from '@/components/CapsuleGreekLine'
 import { Column, Laurel, LockIcon } from '@/components/GreekOrnament'
 
 /** Dos niveles visibles: módulos y cápsulas. Los ids de práctica se conservan. */
-export default function PathScreen({ onPractice }: {
-  onPractice: (capsuleId: string) => void
+export default function PathScreen({ onOpen }: {
+  onOpen: (capsuleId: string) => void
 }) {
   const { statuses, streak } = useStore()
   const actual = currentCapsule(statuses)
@@ -63,7 +65,7 @@ export default function PathScreen({ onPractice }: {
               </div>
               <Laurel className={`module-heading__laurel ${completed === total && total > 0 ? 'is-complete' : ''}`} />
             </header>
-            <CapsulePath moduleId={grupo.module.id} items={grupo.items} currentId={actual?.capsule.id} onPractice={onPractice} />
+            <CapsulePath moduleId={grupo.module.id} items={grupo.items} currentId={actual?.capsule.id} onOpen={onOpen} />
           </section>
         )
       })}
@@ -92,12 +94,19 @@ function agrupar(statuses: CapsuleStatus[]): Grupo[] {
 
 // Las coordenadas del sendero y de los botones comparten la misma geometría.
 const PATH_X = [30, 68, 60, 30]
-const STEP_HEIGHT = 192
+/**
+ * Alto de cada parada del camino. Basta para el medallón, un título de hasta
+ * tres líneas, la línea de letras griegas y el estado textual, sin que una
+ * parada se superponga con la siguiente. Se exporta porque las pruebas lo
+ * comparan con el CSS: el valor viaja al estilo mediante `--step-height`, así
+ * TypeScript y la hoja de estilos no pueden quedar descoordinados.
+ */
+export const STEP_HEIGHT = 248
 const NODE_CENTER = 64
 
-function CapsulePath({ moduleId, items, currentId, onPractice }: {
+function CapsulePath({ moduleId, items, currentId, onOpen }: {
   moduleId: string;
-  items: CapsuleStatus[]; currentId?: string; onPractice: (id: string) => void
+  items: CapsuleStatus[]; currentId?: string; onOpen: (id: string) => void
 }) {
   // Solo presentación: estos huecos no generan tarjetas ni entran en el SRS.
   const slots = Array.from({ length: Math.max(4, items.length) }, (_, i) => items[i])
@@ -110,7 +119,7 @@ function CapsulePath({ moduleId, items, currentId, onPractice }: {
   }).join(' ')
 
   return (
-    <div className="capsule-path">
+    <div className="capsule-path" style={{ ['--step-height' as string]: `${STEP_HEIGHT}px` }}>
       <svg className="capsule-path__curve" viewBox={`0 0 360 ${slots.length * STEP_HEIGHT}`} preserveAspectRatio="none" aria-hidden="true">
         <path className="capsule-path__edge" d={curve} />
         <path className="capsule-path__stone" d={curve} />
@@ -122,7 +131,14 @@ function CapsulePath({ moduleId, items, currentId, onPractice }: {
           const available = !placeholder && status.unlocked
           const current = available && status.capsule.id === currentId && !status.completed
           const label = status?.capsule.title ?? `Cápsula ${index + 1}`
-          const pct = Math.round((status?.mastery ?? 0) * 100)
+          const accessible = status ? capsuleAccessibleName(status.capsule) : label
+          // El SRS queda oculto: el anillo solo distingue completada de no.
+          const pct = status?.completed ? 100 : 0
+          // La palabra «Completada» no se pinta: el check y el anillo dorado
+          // ya la comunican, y el estado sigue accesible en el aria-label.
+          // Las demás cápsulas conservan su estado visible.
+          const muestraEstado = !(status?.completed ?? false)
+          const stateId = `capsule-state-${status?.capsule.id ?? `preview-${moduleId}-${index}`}`
           return (
             <li className="capsule-stop" key={status?.capsule.id ?? `preview-${moduleId}-${index}`}>
               <div className="capsule-stop__position" style={{ left: `${PATH_X[index % PATH_X.length]}%` }}>
@@ -130,10 +146,10 @@ function CapsulePath({ moduleId, items, currentId, onPractice }: {
                 <button type="button"
                   className={`capsule-medallion ${!available ? 'capsule-medallion--locked' : ''} ${placeholder ? 'capsule-medallion--placeholder' : ''}`}
                   disabled={!available}
-                  aria-label={`${label}${placeholder ? ' (próximamente)' : !available ? ' (bloqueada)' : ''}`}
-                  aria-describedby={`capsule-state-${status?.capsule.id ?? `preview-${moduleId}-${index}`}`}
+                  aria-label={`${accessible}${status?.completed ? ' (completada)' : placeholder ? ' (próximamente)' : !available ? ' (bloqueada)' : ''}`}
+                  aria-describedby={muestraEstado ? stateId : undefined}
                   style={{ ['--pct' as string]: pct }}
-                  onClick={() => available && onPractice(status.capsule.id)}>
+                  onClick={() => available && onOpen(status.capsule.id)}>
                   <span className="capsule-medallion__face">
                     <span className="capsule-medallion__number">{index + 1}</span>
                     {placeholder ? <span className="capsule-medallion__glyph" aria-hidden="true">···</span> : !available ? <LockIcon /> : status.completed ? <span className="capsule-medallion__check">✓</span> : <span className="capsule-medallion__glyph" aria-hidden="true">{['α', 'β', 'γ', 'δ'][index % 4]}</span>}
@@ -141,9 +157,12 @@ function CapsulePath({ moduleId, items, currentId, onPractice }: {
                 </button>
                 <div className="capsule-stop__label">
                   <h3>{label}</h3>
-                  <span id={`capsule-state-${status?.capsule.id ?? `preview-${moduleId}-${index}`}`}>
-                    {placeholder ? 'Próximamente' : !available ? 'Por desbloquear' : status.due > 0 ? `${status.due} por repasar` : status.completed ? 'Completada · repasar' : status.started > 0 ? 'Continuar' : 'Empezar'}
-                  </span>
+                  {status && <CapsuleGreekLine capsule={status.capsule} />}
+                  {muestraEstado && (
+                    <span id={stateId}>
+                      {placeholder ? 'Próximamente' : !available ? 'Por desbloquear' : status.started > 0 ? 'Continuar' : 'Empezar'}
+                    </span>
+                  )}
                 </div>
               </div>
             </li>

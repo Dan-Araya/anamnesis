@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event'
 import type { Grade, Settings } from '../src/types'
 import App from '../src/App'
 import { StoreProvider } from '../src/store'
-import { allCards, allVocab, getVocab, path } from '../src/content'
+import { allCards, getVocab } from '../src/content'
 import { DEFAULT_SETTINGS, exportBackup, loadProgress } from '../src/lib/db'
 import { newProgress } from '../src/lib/srs'
 import TypeAnswer from '../src/components/exercises/TypeAnswer'
@@ -17,23 +17,44 @@ test('el módulo muestra directamente las cápsulas y conserva sus bloqueos', as
     </StoreProvider>,
   )
 
-  const primera = await screen.findByRole('button', { name: 'Cápsula 1' })
+  const primera = await screen.findByRole('button', { name: 'Alfa, beta y gamma — Α Β Γ' })
   assert.ok(screen.getByRole('heading', { name: 'Módulo 1' }))
+  assert.ok(screen.getByText('Leer el alfabeto'))
   assert.equal(screen.queryByRole('button', { name: 'Módulo 1' }), null)
-  assert.equal(screen.queryByText('Sección 1'), null)
-  for (const number of [3, 4]) {
-    assert.ok(screen.getByRole('button', { name: `Cápsula ${number} (próximamente)` }).hasAttribute('disabled'))
-  }
-  assert.equal(primera.hasAttribute('disabled'), false)
+  assert.equal(screen.queryByText(/Sección/), null)
 
-  // Cualquier nodo posterior nace bloqueado.
-  for (const { capsule } of path.slice(1)) {
-    const nodo = screen.getByRole('button', { name: `Cápsula ${capsule.number} (bloqueada)` })
-    assert.ok(nodo.hasAttribute('disabled'))
-  }
+  // La primera cápsula está abierta; la segunda nace bloqueada.
+  assert.equal(primera.hasAttribute('disabled'), false)
+  assert.ok(
+    screen.getByRole('button', { name: 'Delta, épsilon y dseta — Δ Ε Ζ (bloqueada)' }).hasAttribute('disabled'),
+  )
+
+  // Las cápsulas 3 y 4 ya existen y nacen bloqueadas.
+  assert.ok(
+    screen.getByRole('button', { name: 'Eta, theta e iota — Η Θ Ι (bloqueada)' }).hasAttribute('disabled'),
+  )
+  assert.ok(
+    screen.getByRole('button', { name: 'Kappa, lambda y mi — Κ Λ Μ (bloqueada)' }).hasAttribute('disabled'),
+  )
+
+  // Lo mismo con las cápsulas 5 y 6, cuyos títulos ya muestran sus letras.
+  assert.ok(
+    screen.getByRole('button', { name: 'Ni, xi y ómicron — Ν Ξ Ο (bloqueada)' }).hasAttribute('disabled'),
+  )
+  assert.ok(
+    screen.getByRole('button', { name: 'Pi, rho y sigma — Π Ρ Σ (bloqueada)' }).hasAttribute('disabled'),
+  )
+
+  // Y con las cápsulas 7 y 8, que completan el alfabeto.
+  assert.ok(
+    screen.getByRole('button', { name: 'Tau, upsilon y phi — Τ Υ Φ (bloqueada)' }).hasAttribute('disabled'),
+  )
+  assert.ok(
+    screen.getByRole('button', { name: 'Chi, psi y omega — Χ Ψ Ω (bloqueada)' }).hasAttribute('disabled'),
+  )
 })
 
-test('pulsar una cápsula del camino entra a practicar y guarda el progreso', async () => {
+test('tocar una cápsula abre primero su material, y su botón inicia la práctica', async () => {
   const user = userEvent.setup()
   render(
     <StoreProvider>
@@ -41,14 +62,24 @@ test('pulsar una cápsula del camino entra a practicar y guarda el progreso', as
     </StoreProvider>,
   )
 
-  await user.click(await screen.findByRole('button', { name: 'Cápsula 1' }))
+  await user.click(await screen.findByRole('button', { name: 'Alfa, beta y gamma — Α Β Γ' }))
 
-  await screen.findByText('¿Qué significa?')
-  const griego = document.querySelector('.prompt__greek')?.textContent ?? ''
-  const vocab = allVocab.find((v) => v.greek === griego)
-  assert.ok(vocab, `no se encontró el vocabulario para «${griego}»`)
+  // Primero la lección: enseña las formas y aún no pregunta nada.
+  assert.ok(await screen.findByText(/alfa mayúscula/))
+  assert.ok(screen.getByText(/alfa minúscula/))
+  assert.ok(screen.getByText(/beta mayúscula/))
+  assert.equal(screen.queryByText('¿Qué letra es?'), null)
 
-  await user.click(screen.getByRole('button', { name: vocab.es[0]! }))
+  // El encabezado muestra el título español y el resumen griego derivado.
+  assert.ok(screen.getByRole('heading', { name: 'Alfa, beta y gamma' }))
+  assert.ok(screen.getByText('Α · Β · Γ'))
+
+  // El botón de la lección inicia la práctica.
+  await user.click(screen.getByRole('button', { name: 'Comenzar práctica' }))
+
+  // La primera tarjeta es reconocer alfa, en su primera aparición: mayúscula.
+  await screen.findByText('¿Qué letra es?')
+  await user.click(screen.getByRole('button', { name: 'alfa mayúscula' }))
   await user.click(await screen.findByRole('button', { name: 'Continuar' }))
 
   await waitFor(async () => {
@@ -56,39 +87,45 @@ test('pulsar una cápsula del camino entra a practicar y guarda el progreso', as
     assert.equal(progress.size, 1)
     const [saved] = [...progress.values()]
     assert.equal(saved!.state, 'aprendiendo')
-    assert.equal(saved!.cardId.startsWith('v:m01-s01-'), true)
+    assert.equal(saved!.cardId, 'l:alpha:rec')
     const backup = await exportBackup()
     assert.match(backup.reviews[0]!.eventId, /^[0-9a-f-]{36}$/)
+    // La respuesta objetiva se calificó internamente como «bien» (3).
+    assert.equal(backup.reviews[0]!.grade, 3)
   })
 })
 
-test('las expresiones marcadas solo para reconocer no piden escritura', () => {
-  const expresion = getVocab('m01-s01-te-kai')
-  assert.ok(expresion)
-  assert.deepEqual(expresion.cards, ['reconocer'])
+test('δέ se reconoce y translitera; cada letra genera sus dos tarjetas', () => {
+  const de = getVocab('de')
+  assert.ok(de)
+  assert.deepEqual(de.cards, ['reconocer', 'transliterar'])
 
-  // De esa entrada sale la tarjeta de reconocer, pero no la de producir.
   const ids = new Set(allCards.map((c) => c.id))
-  assert.equal(ids.has(`v:${expresion.id}:rec`), true)
-  assert.equal(ids.has(`v:${expresion.id}:pro`), false)
+  assert.equal(ids.has('v:de:rec'), true)
+  assert.equal(ids.has('v:de:trl'), true)
+  assert.equal(ids.has('v:de:pro'), false)
 
-  // Una palabra normal sí genera las dos.
-  assert.equal(ids.has('v:m01-s01-kai:rec'), true)
-  assert.equal(ids.has('v:m01-s01-kai:pro'), true)
+  assert.equal(ids.has('l:alpha:rec'), true)
+  assert.equal(ids.has('l:alpha:pro'), true)
+})
+
+test('la base de datos está en la versión 5, con la migración de transliterar', async () => {
+  const backup = await exportBackup()
+  assert.equal(backup.version, 5)
 })
 
 test('el teclado en pantalla compone la forma acentuada y la da por buena', async () => {
   const user = userEvent.setup()
-  const vocab = getVocab('m01-s01-epeita')
+  const vocab = getVocab('de')
   assert.ok(vocab)
 
   const card = {
-    id: 'v:m01-s01-epeita:pro',
+    id: 'v:de:pro',
     moduleId: 'module-01',
     sectionId: 'm01-s01',
-    capsuleId: 'm01-s01-c01',
+    capsuleId: 'm01-s01-c02',
     kind: 'vocab-producir' as const,
-    sourceId: 'm01-s01-epeita',
+    sourceId: 'de',
   }
   const settings: Settings = { ...DEFAULT_SETTINGS, showKeyboard: true }
   let recibido: Grade | null = null
@@ -103,16 +140,13 @@ test('el teclado en pantalla compone la forma acentuada y la da por buena', asyn
     />,
   )
 
-  // ἔπειτα: la épsilon inicial lleva espíritu suave y acento agudo.
+  // δέ: la delta, la épsilon y el acento agudo sobre la épsilon.
+  await user.click(screen.getByRole('button', { name: 'δ' }))
   await user.click(screen.getByRole('button', { name: 'ε' }))
-  await user.click(screen.getByRole('button', { name: 'Espíritu suave' }))
   await user.click(screen.getByRole('button', { name: 'Agudo' }))
-  for (const letra of ['π', 'ε', 'ι', 'τ', 'α']) {
-    await user.click(screen.getByRole('button', { name: letra }))
-  }
 
   const input = screen.getByLabelText('Tu respuesta en griego') as HTMLInputElement
-  assert.equal(input.value, 'ἔπειτα')
+  assert.equal(input.value, 'δέ')
 
   await user.click(screen.getByRole('button', { name: 'Comprobar' }))
   await screen.findByText('Correcto')
@@ -125,12 +159,12 @@ test('el acento pulsado antes de la vocal espera y cae donde debe', async () => 
   const user = userEvent.setup()
 
   const card = {
-    id: 'v:m01-s01-de:pro',
+    id: 'v:de:pro',
     moduleId: 'module-01',
     sectionId: 'm01-s01',
-    capsuleId: 'm01-s01-c01',
+    capsuleId: 'm01-s01-c02',
     kind: 'vocab-producir' as const,
-    sourceId: 'm01-s01-de',
+    sourceId: 'de',
   }
   const settings: Settings = { ...DEFAULT_SETTINGS, showKeyboard: true }
 
@@ -164,12 +198,12 @@ test('el acento pulsado antes de la vocal espera y cae donde debe', async () => 
 /** Monta el ejercicio de escritura de δέ con el teclado en pantalla activo. */
 function montarEscritura() {
   const card = {
-    id: 'v:m01-s01-de:pro',
+    id: 'v:de:pro',
     moduleId: 'module-01',
     sectionId: 'm01-s01',
-    capsuleId: 'm01-s01-c01',
+    capsuleId: 'm01-s01-c02',
     kind: 'vocab-producir' as const,
-    sourceId: 'm01-s01-de',
+    sourceId: 'de',
   }
   render(
     <TypeAnswer

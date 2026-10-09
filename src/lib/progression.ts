@@ -38,7 +38,11 @@ export interface CapsuleStatus {
   unlocked: boolean
   /** Nulo cuando la cápsula aún no tiene contenido. */
   mastery: number | null
-  /** Ha alcanzado el umbral: el nodo se pinta como superado. */
+  /**
+   * Se completó cuando todas sus tarjetas activas se respondieron al menos
+   * una vez. Es lo que pinta el nodo como superado; el SRS (mastery, due…)
+   * queda oculto y nunca desmarca una cápsula ya completada.
+   */
   completed: boolean
   total: number
   started: number
@@ -55,6 +59,15 @@ export interface BuildOptions {
   unlimited?: boolean
   /** Tarjetas nuevas ya introducidas hoy. */
   newToday?: number
+  /**
+   * Repasar a voluntad la cápsula elegida aunque no le quede nada vencido.
+   * Lo usa «Repasar cápsula» sobre una cápsula completada: sus tarjetas entran
+   * en la cola aunque no toquen. Es práctica libre: la neutralidad frente al
+   * SRS no sale de `schedule` —que sí modificaría el estado de la tarjeta—
+   * sino de que quien consume la cola (SessionScreen) no persista nada: ni
+   * CardProgress, ni ReviewLog, ni DailyStat.
+   */
+  reviewCapsule?: boolean
 }
 
 /** Tope de la proporción de repaso: siempre queda sitio para lo nuevo. */
@@ -66,13 +79,15 @@ const MAX_MIX = 0.8
 
 /**
  * El camino es lineal y atraviesa secciones y módulos: la primera cápsula
- * siempre está abierta y cada una se abre cuando la anterior alcanza el umbral
- * de dominio. Una cápsula todavía sin contenido no bloquea a la siguiente.
+ * siempre está abierta y cada una se abre cuando se completa la anterior.
+ * Una cápsula queda completada cuando todas sus tarjetas activas se han
+ * respondido al menos una vez, sin importar si la primera respuesta fue
+ * correcta: la programación SRS decide después cuándo vuelve cada tarjeta.
+ * Una cápsula todavía sin contenido no bloquea a la siguiente.
  */
 export function computeStatuses(
   entries: CapsuleEntry[],
   progress: Map<string, CardProgress>,
-  settings: Settings,
   now = Date.now(),
 ): CapsuleStatus[] {
   const result: CapsuleStatus[] = []
@@ -81,6 +96,7 @@ export function computeStatuses(
   for (const { capsule, section, module, cards } of entries) {
     let sum = 0
     let started = 0
+    let answered = 0
     let due = 0
     let fresh = 0
 
@@ -92,6 +108,7 @@ export function computeStatuses(
       }
       started++
       sum += mastery(p)
+      if (p.reps >= 1) answered++
       if (isDue(p, now)) due++
     }
 
@@ -99,7 +116,8 @@ export function computeStatuses(
     // circular entre `unlocked` y la asignación del final del bucle.
     const unlocked: boolean = previousCleared
     const score = cards.length === 0 ? null : sum / cards.length
-    const cleared = score === null || score >= settings.unlockThreshold
+    // Completada = todas las tarjetas activas respondidas al menos una vez.
+    const completed: boolean = unlocked && cards.length > 0 && answered === cards.length
 
     result.push({
       capsule,
@@ -107,14 +125,14 @@ export function computeStatuses(
       module,
       unlocked,
       mastery: score,
-      completed: unlocked && cleared && cards.length > 0,
+      completed,
       total: cards.length,
       started,
       due,
       fresh,
     })
 
-    previousCleared = unlocked && cleared
+    previousCleared = unlocked && (cards.length === 0 || completed)
   }
 
   return result
@@ -131,15 +149,28 @@ export function currentStatus(statuses: CapsuleStatus[]): CapsuleStatus | undefi
 // ---------------------------------------------------------------------------
 
 /**
- * Cómo se pregunta una tarjeta según lo asentada que esté. Las primeras veces
- * se reconoce entre opciones; con el tiempo hay que producir la forma.
+ * Cómo se pregunta una tarjeta según lo asentada que esté. El curso actual
+ * (alfabeto) solo usa preguntas objetivas de opción múltiple: reconocer y
+ * producir nunca se convierten en flashcard ni en escritura por más asentada
+ * que esté la tarjeta. Los modos más exigentes quedan para material futuro.
  */
 export function pickMode(card: Card, p: CardProgress): ExerciseMode {
   switch (card.kind) {
     case 'vocab-reconocer':
-      return p.state === 'nueva' || p.streak < 2 ? 'opcion-multiple' : 'flashcard'
+      // Siempre entre opciones: la respuesta es objetiva, nunca autoevaluada.
+      return 'opcion-multiple'
+    case 'vocab-transliterar':
+      // Elegir la transliteración entre opciones: nunca se teclea ni se
+      // autoevalúa, por asentada que esté la tarjeta.
+      return 'opcion-multiple'
     case 'vocab-producir':
       return p.state === 'nueva' ? 'opcion-multiple' : 'escribir'
+    case 'letra-reconocer':
+      // La letra se muestra en mayúscula o minúscula: es la misma tarjeta.
+      return 'opcion-multiple'
+    case 'letra-producir':
+      // Se elige la forma entre opciones, sin teclado ni autoevaluación.
+      return 'opcion-multiple'
     case 'morfologia':
       // La primera vez se muestra la forma; después hay que escribirla.
       return p.state === 'nueva' ? 'flashcard' : 'escribir'
@@ -187,6 +218,14 @@ const toItem = (card: Card, progress: CardProgress): SessionItem => ({
  * vez de darse por sabido. Entran primero las tarjetas que ya han vencido y,
  * si no bastan para llenar la proporción de repaso, se adelantan las que están
  * más cerca de vencer, dando prioridad a lo de la misma sección.
+ *
+ * La cápsula es la unidad atómica: al elegirla explícitamente (`capsuleId`),
+ * todas sus tarjetas nuevas entran aunque el cupo diario esté cubierto, y el
+ * objetivo diario recorta primero los repasos añadidos de la mezcla antes que
+ * lo imprescindible de la cápsula. Con `reviewCapsule`, las tarjetas de una
+ * cápsula completada entran como repetición voluntaria aunque nada esté
+ * vencido; la sesión resultante es práctica libre y no debe persistir
+ * respuestas, para no alterar la programación SRS ni el estado visible.
  */
 export function selectQueue(
   entries: CapsuleEntry[],
@@ -237,9 +276,12 @@ export function selectQueue(
   upcoming.sort((a, b) => a.rank - b.rank || a.progress.due - b.progress.due)
 
   // --- Material nuevo ------------------------------------------------------
+  // Una cápsula elegida explícitamente entra entera, aunque el cupo diario ya
+  // esté cubierto: el límite de tarjetas nuevas sigue valiendo para las
+  // sesiones globales, no para partir una cápsula por la mitad.
   const newBudget = options.onlyReviews
     ? 0
-    : options.unlimited
+    : options.unlimited || options.capsuleId
       ? fresh.length
       : Math.max(0, settings.newPerDay - (options.newToday ?? 0))
 
@@ -250,26 +292,55 @@ export function selectQueue(
     isNew: true,
   }))
 
-  // --- Repaso --------------------------------------------------------------
-  const reviewItems: SessionItem[] = dueCards.map((c) => toItem(c.card, c.progress))
+  // --- Repasos --------------------------------------------------------------
+  const dueItems: SessionItem[] = dueCards.map((c) => toItem(c.card, c.progress))
 
+  // Repasos añadidos por la mezcla: solo cuando entra material nuevo. Se
+  // mantienen aparte para poder recortarlos sin tocar lo imprescindible.
+  const extraItems: SessionItem[] = []
   if (!options.onlyReviews && freshItems.length > 0) {
     const mix = Math.min(MAX_MIX, Math.max(0, settings.mixRatio))
     // Cuántos repasos hacen falta para que supongan `mix` de la sesión.
     const wanted = Math.round((freshItems.length * mix) / (1 - mix))
-    const missing = wanted - reviewItems.length
+    const missing = wanted - dueItems.length
     if (missing > 0) {
       // Se adelantan repasos que aún no tocaban: responderlos antes de tiempo
       // no alarga su intervalo (lo controla `schedule`), así que refrescan
       // sin falsear la programación.
       for (const c of upcoming.slice(0, missing)) {
-        reviewItems.push(toItem(c.card, c.progress))
+        extraItems.push(toItem(c.card, c.progress))
       }
     }
   }
 
-  const queue = interleave(reviewItems, freshItems)
-  return options.unlimited ? queue : queue.slice(0, settings.dailyGoal)
+  // --- Repetición voluntaria ------------------------------------------------
+  // «Repasar cápsula» de una cápsula completada: sus tarjetas entran aunque
+  // nada esté vencido, siempre de la propia cápsula, sin material futuro. La
+  // sesión es práctica libre y el consumidor no persistirá las respuestas.
+  const voluntaryItems: SessionItem[] = []
+  if (options.reviewCapsule && target) {
+    for (const c of upcoming) {
+      if (c.card.capsuleId !== target.capsule.id) continue
+      voluntaryItems.push(toItem(c.card, c.progress))
+    }
+  }
+
+  // Lo imprescindible (repasos vencidos y material nuevo) va mezclado; los
+  // añadidos (mezcla adelantada y repetición voluntaria) van después.
+  const core = interleave(dueItems, freshItems)
+  const queue = [...core, ...extraItems, ...voluntaryItems]
+
+  if (options.unlimited) return queue
+
+  // Sesiones globales: el objetivo diario recorta la cola entera, como antes.
+  if (!options.capsuleId) return queue.slice(0, settings.dailyGoal)
+
+  // Sesiones de cápsula: la cápsula es la unidad atómica. Sus tarjetas nuevas
+  // y los repasos vencidos entran completos aunque superen el objetivo; lo
+  // que se recorta son solo los añadidos.
+  if (queue.length <= settings.dailyGoal) return queue
+  const room = Math.max(0, settings.dailyGoal - core.length)
+  return [...core, ...queue.slice(core.length, core.length + room)]
 }
 
 export function shuffle<T>(items: T[]): T[] {

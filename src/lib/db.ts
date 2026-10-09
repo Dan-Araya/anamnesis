@@ -2,8 +2,9 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type { CardProgress, DailyStat, ReviewLog, Settings } from '@/types'
 
 /**
- * Persistencia local. Todo vive en el móvil: no hay servidor ni cuentas.
- * El respaldo es el export a JSON de la pantalla de ajustes.
+ * Persistencia local-first. IndexedDB es la fuente de verdad y funciona sin
+ * cuenta; desde ajustes se puede exportar un JSON o enviar/restaurar una copia
+ * privada mediante la integración opcional con Supabase.
  */
 
 const DB_NAME = 'griego-antiguo'
@@ -14,16 +15,23 @@ const DB_NAME = 'griego-antiguo'
  * dato lo aporta el contenido. Los registros se conservan.
  * v4: cada repaso recibe un eventId estable para poder sincronizarlo. Los
  * registros anteriores se conservan y reciben un id derivado de su clave.
+ * v5: las cápsulas 2, 3 y 4 ganan una tarjeta de transliteración para δέ, θεά
+ * y κλῖμα. Para quien ya hubiera practicado esas palabras se clona la
+ * programación de la tarjeta de reconocer a la nueva tarjeta de
+ * transliterar, sin tocar historial ni estadísticas y sin sobrescribir un
+ * progreso existente. La cápsula no pierde su estado completado y la tarjeta
+ * nueva aparece cuando su programación clonada corresponda.
  */
-const DB_VERSION = 4
+const DB_VERSION = 5
 
 export const DEFAULT_SETTINGS: Settings = {
   newPerDay: 10,
   dailyGoal: 40,
   mixRatio: 0.4,
   strictDiacritics: false,
-  // Con 0,5 basta con haber graduado la mayoría de las tarjetas de la cápsula:
-  // una rezagada no bloquea el camino.
+  // Ya no gobierna el desbloqueo: una cápsula queda completada cuando todas
+  // sus tarjetas se han respondido al menos una vez. Se conserva el campo
+  // para no alterar los ajustes guardados.
   unlockThreshold: 0.5,
   showKeyboard: true,
   theme: 'claro',
@@ -96,6 +104,36 @@ function db(): Promise<IDBPDatabase<Schema>> {
             void cursor.update({ ...cursor.value, eventId: `legacy:${String(cursor.primaryKey)}` })
           }
           return cursor.continue().then(migrate)
+        })
+      }
+
+      if (oldVersion > 0 && oldVersion < 5) {
+        // Las nuevas tarjetas de transliterar clonan la programación de su
+        // tarjeta de reconocer, si existe: así una cápsula ya completada
+        // sigue completada y las posteriores siguen desbloqueadas. Solo se
+        // cambian cardId y kind; el resto de campos se conserva tal cual. Si
+        // ya hay progreso de transliterar, no se toca; si falta la fuente, no
+        // se inventa nada: la tarjeta nueva se aprende normalmente.
+        const TRANS: ReadonlyArray<readonly [rec: string, trl: string]> = [
+          ['v:de:rec', 'v:de:trl'],
+          ['v:thea:rec', 'v:thea:trl'],
+          ['v:klima:rec', 'v:klima:trl'],
+        ]
+        const progress = tx.objectStore('progress')
+        void progress.getAllKeys().then(async (keys) => {
+          for (const key of keys) {
+            const value = await progress.get(key)
+            const pair = TRANS.find(([rec]) => rec === value?.cardId)
+            if (!pair || !value) continue
+            const existing = await progress.get(pair[1])
+            if (existing) continue
+            const { cardId: _cardId, kind: _kind, ...rest } = value
+            void progress.put({
+              ...rest,
+              cardId: pair[1],
+              kind: 'vocab-transliterar',
+            })
+          }
         })
       }
     },

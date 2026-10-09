@@ -3,9 +3,10 @@
 ## Proyecto
 
 Anamnesis es una PWA de práctica diaria de griego antiguo por repetición
-espaciada (SRS), de uso personal: sin backend, sin cuentas, con todo el
-progreso guardado localmente en el dispositivo. Se despliega como sitio
-estático en GitHub Pages.
+espaciada (SRS), de uso personal y publicación abierta. Es local-first: todo
+el progreso se guarda en el dispositivo y la app funciona sin cuenta. Una
+cuenta opcional permite guardar y restaurar copias privadas mediante Supabase.
+El frontend se despliega como sitio estático en GitHub Pages.
 
 ## Arquitectura (resumen)
 
@@ -16,9 +17,10 @@ estático en GitHub Pages.
   (`cardsForCapsule`) a partir del vocabulario, los paradigmas, las frases y
   los `drills` de cada cápsula. No se guardan como tal: se recalculan en
   cada arranque.
-- **Progreso**: vive en IndexedDB (`src/lib/db.ts`, vía `idb`), indexado por
-  el `id` de cada tarjeta. No hay servidor ni sincronización; el respaldo es
-  el export/import JSON de la pantalla de ajustes.
+- **Progreso**: la fuente de verdad vive en IndexedDB (`src/lib/db.ts`, vía
+  `idb`), indexada por el `id` de cada tarjeta. Se puede respaldar mediante
+  export/import JSON o, con una cuenta opcional, guardar y restaurar una copia
+  privada en Supabase. No existe sincronización automática entre dispositivos.
 - **Repetición espaciada**: `src/lib/srs.ts` (variante SM-2 con pasos de
   aprendizaje). `src/lib/progression.ts` decide qué cápsulas están
   desbloqueadas y arma la cola de cada sesión, mezclando material antiguo
@@ -41,10 +43,12 @@ estático en GitHub Pages.
    deben nombrar el libro de texto ni copiar su numeración de capítulos —
    solo "módulo 1, módulo 2…", genéricos. Verificación: revisar el diff en
    busca de nombres propios de manuales o referencias a su estructura.
-3. **Sin backend ni cuentas.** Toda persistencia es local (IndexedDB) y el
-   despliegue es un sitio estático (GitHub Pages). Verificación: ningún
-   cambio debe añadir llamadas de red a un servicio propio ni un sistema de
-   login.
+3. **Local-first y cuenta opcional.** La aplicación debe seguir funcionando
+   por completo sin cuenta: IndexedDB es la fuente de verdad y GitHub Pages
+   sirve el frontend estático. Supabase se usa únicamente para autenticación y
+   copias privadas iniciadas por el usuario; no se debe convertir la cuenta en
+   requisito ni introducir sincronización automática sin diseñar primero la
+   resolución de conflictos y la preservación del progreso local.
 
 ## Flujo de trabajo
 
