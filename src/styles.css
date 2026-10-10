@@ -999,12 +999,45 @@ textarea {
 }
 
 /* Aviso explicativo en el flujo de la pregunta, también visible en móvil. */
-.diacritics-notice { text-align: left; font-size: .9rem; line-height: 1.45; border: 1px solid var(--text); border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
-.diacritics-notice p { margin: 0 0 6px; }
-.diacritics-notice p:last-child { margin-bottom: 0; }
-.diacritics-example { font-size: 1.45rem; }
-.diacritics-key { display: flex; flex-direction: column; gap: 4px; }
-.diacritics-mark { display: inline-block; font-size: 2rem; line-height: 1; min-width: 1.4rem; text-align: center; border: 1px solid currentColor; border-radius: 4px; }
 .alphabet-reference table { width: 100%; border-collapse: collapse; font-size: .9rem; }
 .alphabet-reference th, .alphabet-reference td { text-align: left; padding: 5px 3px; }
 .alphabet-reference .griego { font-size: 1.35rem; }
+
+.greek-word-help {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 4px 6px;
+  text-decoration: underline dotted;
+  text-underline-offset: .18em;
+  cursor: pointer;
+}
+.greek-word-help:focus-visible { outline: 3px solid var(--accent); border-radius: 6px; }
+.word-help-bounds {
+  position: fixed;
+  top: calc(var(--safe-top) + 16px);
+  bottom: calc(var(--safe-bottom) + 16px);
+  left: calc(var(--safe-left) + 16px);
+  right: calc(var(--safe-right) + 16px);
+  pointer-events: none;
+  visibility: hidden;
+}
+.word-help-panel {
+  position: fixed;
+  z-index: 1000;
+  width: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-raised);
+  color: var(--text);
+  padding: 12px 16px;
+  box-shadow: 0 8px 24px #0003;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.word-help-panel p { margin: 8px 0; }
+.word-help-panel .griego { font-size: 1.35rem; }
+.word-help-close { display: block; margin-left: auto; min-height: 44px; padding: 8px; }

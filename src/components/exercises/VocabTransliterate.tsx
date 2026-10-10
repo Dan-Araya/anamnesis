@@ -1,4 +1,4 @@
-import DiacriticsNotice from '@/components/DiacriticsNotice'
+import GreekWordHelp from '@/components/GreekWordHelp'
 import { useMemo, useState } from 'react'
 import type { Grade } from '@/types'
 import { getVocab } from '@/content'
@@ -44,8 +44,7 @@ export default function VocabTransliterate({
     <>
       <div className="prompt">
         <div className="prompt__hint">¿Qué transliteración le corresponde?</div>
-        <DiacriticsNotice capsuleId={item.card.capsuleId} word={vocab.greek} transliteration />
-        <div className="prompt__greek griego">{vocab.greek}</div>
+        <div className="prompt__greek griego"><GreekWordHelp exerciseId={item.card.id} capsuleId={item.card.capsuleId} word={vocab.greek} answer={`Se escribe: ${correcta}`} /></div>
       </div>
 
       <div className="options">

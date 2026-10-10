@@ -247,3 +247,10 @@ export function backspace(text: string): string {
   if (!text) return text
   return Array.from(text.normalize('NFC')).slice(0, -1).join('')
 }
+
+/** Comparaciones para la ayuda inicial, sin normalizar sigma ni letras latinas. */
+export function markedGreekLetters(word: string) {
+  return [...word.normalize('NFD').matchAll(/([\u0370-\u03ff])([\u0300-\u036f]+)/gu)]
+    .map(([original, base, marks]) => ({ original: original.normalize('NFC'), base: base!, count: [...marks!].length }))
+    .filter((entry, index, entries) => entries.findIndex(e => e.original === entry.original) === index)
+}

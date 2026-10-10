@@ -15,7 +15,8 @@ import { createRun, advance, currentItem, phaseOf } from '../src/lib/session-run
 import SessionScreen from '../src/screens/SessionScreen'
 import { StoreProvider, useStore } from '../src/store'
 import Consolidation from '../src/components/exercises/Consolidation'
-import DiacriticsNotice, { shouldShowDiacriticsNotice } from '../src/components/DiacriticsNotice'
+import GreekWordHelp from '../src/components/GreekWordHelp'
+import { markedGreekLetters } from '../src/lib/greek'
 import { validateModules } from './check-content'
 
 const cid = 'm01-s01-c09'
@@ -83,17 +84,50 @@ test('check-content rechaza referencias futuras, alternativas repetidas y palabr
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
 
-test('aviso visible con ejemplos, etiquetas y distinción de macrones, solo en palabras con marcas', () => {
-  assert.equal(shouldShowDiacriticsNotice('m01-s01-c01', 'δέ'), false)
-  assert.equal(shouldShowDiacriticsNotice('m01-s01-c02', 'Δ δ'), false)
-  assert.equal(shouldShowDiacriticsNotice('m01-s01-c02', 'δε'), false)
-  render(<DiacriticsNotice capsuleId={cid} word="ὄνομα" transliteration />)
-  const notice = screen.getByRole('complementary', { name: 'Sobre los diacríticos' })
-  assert.ok(notice.textContent?.includes('Las rayas de ē/ō'))
-  assert.ok(notice.textContent?.includes('marca curva a la izquierda'))
-  assert.ok(notice.textContent?.includes('rayita a la derecha'))
-  assert.equal(notice.querySelectorAll('.diacritics-example').length, 2)
-  assert.equal(notice.querySelectorAll('button, input').length, 0)
+test('ayuda contextual con caracteres actuales, teclado, cierre y sin elegir alternativas', async () => {
+  const user = userEvent.setup()
+  assert.deepEqual(markedGreekLetters('ὄνομα δέ ē ō ς'), [
+    { original: 'ὄ', base: 'ο', count: 2 }, { original: 'έ', base: 'ε', count: 1 },
+  ])
+  let grade = 0
+  const card = questions[4]!
+  const { rerender } = render(<Consolidation item={{ card, progress: newProgress(card), mode: 'opcion-multiple', isNew: true }} onGraded={() => { grade++ }} />)
+  const trigger = screen.getByRole('button', { name: 'Ayuda para ὄνομα' })
+  assert.ok(screen.queryByRole('dialog') === null)
+  trigger.focus()
+  await user.keyboard('{Enter}')
+  assert.ok(screen.getByRole('dialog').textContent?.includes('Se escribe: onoma'))
+  assert.ok(screen.getByRole('dialog').textContent?.includes('ὄ → ο'))
+  await user.keyboard('{Escape}')
+  assert.ok(screen.queryByRole('dialog') === null)
+  assert.ok(document.activeElement === trigger)
+  await user.click(trigger)
+  await user.click(screen.getByRole('button', { name: 'onoma' }))
+  assert.ok(screen.queryByRole('dialog') === null)
+  assert.equal(screen.queryByRole('button', { name: 'Continuar' }), null)
+  await user.click(trigger)
+  await user.click(trigger)
+  assert.ok(screen.queryByRole('dialog') === null)
+  await user.click(trigger)
+  await user.click(screen.getByRole('button', { name: 'Cerrar ayuda' }))
+  await user.click(trigger)
+  rerender(<Consolidation item={{ card: questions[5]!, progress: newProgress(questions[5]!), mode: 'opcion-multiple', isNew: true }} onGraded={() => { grade++ }} />)
+  assert.ok(screen.queryByRole('dialog') === null)
+  assert.equal(grade, 0)
+})
+
+test('el recordatorio se limita al alfabeto y a palabras con marcas; conserva macrones', async () => {
+  const user = userEvent.setup()
+  const { rerender } = render(<GreekWordHelp exerciseId="1" capsuleId={cid} word="ψυχή" answer="Se escribe: psychē" />)
+  await user.click(screen.getByRole('button', { name: 'Ayuda para ψυχή' }))
+  assert.ok(screen.getByRole('dialog').textContent?.includes('psychē'))
+  assert.ok(screen.getByRole('dialog').textContent?.includes('ή → η'))
+  rerender(<GreekWordHelp exerciseId="2" capsuleId="future-signs" word="ψυχή" answer="Se escribe: psychē" />)
+  await user.click(screen.getByRole('button', { name: 'Ayuda para ψυχή' }))
+  assert.ok(!screen.getByRole('dialog').textContent?.includes('Mira'))
+  rerender(<GreekWordHelp exerciseId="3" capsuleId={cid} word="δε" answer="Se escribe: de" />)
+  await user.click(screen.getByRole('button', { name: 'Ayuda para δε' }))
+  assert.ok(!screen.getByRole('dialog').textContent?.includes('Mira'))
 })
 
 test('cada pregunta muestra cuatro opciones y califica objetivamente', async () => {
@@ -102,7 +136,15 @@ test('cada pregunta muestra cuatro opciones y califica objetivamente', async () 
     let grade = 0
     const { unmount } = render(<Consolidation item={{ card, progress: newProgress(card), mode: 'opcion-multiple', isNew: true }} onGraded={g => { grade = g }} />)
     assert.equal(document.querySelectorAll('.option').length, 4)
-    assert.equal(Boolean(screen.queryByRole('complementary')), Boolean(resolved(card.sourceId).word))
+    assert.ok(screen.queryByRole('dialog') === null)
+    const r = resolved(card.sourceId)
+    if (r.word) {
+      await user.click(screen.getByRole('button', { name: `Ayuda para ${r.prompt}` }))
+      assert.ok(screen.getByRole('dialog').textContent?.includes(r.answer))
+      if (!r.transliteration) assert.ok(screen.getByRole('dialog').textContent?.includes('sigma al final'))
+      assert.equal(grade, 0)
+      await user.click(screen.getByRole('button', { name: 'Cerrar ayuda' }))
+    }
     await user.click(screen.getByRole('button', { name: resolved(card.sourceId).answer }))
     await user.click(screen.getByRole('button', { name: 'Continuar' }))
     assert.equal(grade, 3)

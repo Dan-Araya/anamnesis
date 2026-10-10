@@ -3,7 +3,7 @@ import type { Grade } from '@/types'
 import { getQuestion, lettersUpTo, vocabUpTo } from '@/content'
 import { resolveQuestion } from '@/lib/consolidation'
 import { shuffle, type SessionItem } from '@/lib/session'
-import DiacriticsNotice from '@/components/DiacriticsNotice'
+import GreekWordHelp from '@/components/GreekWordHelp'
 
 export default function Consolidation({ item, onGraded }: {
   item: SessionItem; onGraded: (grade: Grade) => void
@@ -20,8 +20,9 @@ export default function Consolidation({ item, onGraded }: {
   return <>
     <div className="prompt">
       <div className="prompt__hint">{resolved.hint}</div>
-      <DiacriticsNotice capsuleId={item.card.capsuleId} word={resolved.word} transliteration={resolved.transliteration} />
-      <div className="prompt__greek griego">{resolved.prompt}</div>
+      <div className="prompt__greek griego">{resolved.word ? <GreekWordHelp exerciseId={item.card.id} capsuleId={item.card.capsuleId}
+        word={resolved.word} label={resolved.prompt}
+        answer={resolved.transliteration ? `Se escribe: ${resolved.answer}` : `Respuesta: ${resolved.answer}. Es la forma de sigma al final de una palabra (${resolved.word}).`} /> : resolved.prompt}</div>
     </div>
     <div className="options">
       {options.map(label => <button type="button" key={label} disabled={answered}

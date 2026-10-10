@@ -192,3 +192,15 @@ test('sin vocabulario ni transliteración la tarjeta avisa sin lanzar excepcione
   )
   assert.equal(container.textContent, 'Falta la transliteración de esta tarjeta.')
 })
+
+test('ayuda revela la transliteración antes de responder sin calificar', async () => {
+  const user = userEvent.setup()
+  let grade = 0
+  render(<VocabTransliterate item={itemDe('v:de:trl')} onGraded={() => { grade++ }} />)
+  await user.click(screen.getByRole('button', { name: 'Ayuda para δέ' }))
+  assert.ok(screen.getByRole('dialog').textContent?.includes('Se escribe: de'))
+  assert.ok(screen.getByRole('dialog').textContent?.includes('έ → ε'))
+  assert.equal(screen.queryByRole('button', { name: 'Continuar' }), null)
+  await user.click(screen.getByRole('button', { name: 'Cerrar ayuda' }))
+  assert.equal(grade, 0)
+})
