@@ -56,8 +56,14 @@ export default function CardsScreen({
           disabled={due === 0}
           onClick={onReview}
         >
-          {due > 0 ? `Repasar · ${due} tarjetas` : 'Nada que repasar'}
+          {due > 0 ? `Repasar · ${Math.min(due, settings.dailyGoal)} tarjetas` : 'Nada que repasar'}
         </button>
+
+        {due > 0 && (
+          <p className="muted small">
+            {due} pendientes. Hasta {settings.dailyGoal} por repaso de Tarjetas.
+          </p>
+        )}
 
         {due === 0 && (
           <div className="card">

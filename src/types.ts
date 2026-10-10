@@ -148,8 +148,7 @@ export interface GrammarNote {
 /**
  * Un nodo del camino: el material que se practica de una vez. Al completarla
  * —responder una vez todas sus tarjetas— abre la siguiente, pero su
- * vocabulario sigue apareciendo mezclado en las cápsulas posteriores
- * mientras el algoritmo lo pida.
+ * contenido se repite completo al elegirla. El repaso SRS vive en Tarjetas.
  */
 export interface Capsule {
   id: string
@@ -257,7 +256,7 @@ export interface CardProgress {
   reps: number
   lapses: number
   lastReview: number | null
-  /** Aciertos consecutivos, para decidir el modo de presentación. */
+  /** Aciertos consecutivos conservados para el seguimiento SRS. */
   streak: number
 }
 
@@ -281,15 +280,11 @@ export interface ReviewLog {
 }
 
 export interface Settings {
-  /** Tarjetas nuevas por día. */
+  /** Límite heredado, sin efecto en las cápsulas; se conserva al guardar ajustes. */
   newPerDay: number
   /** Objetivo diario de tarjetas (nuevas + repasos). */
   dailyGoal: number
-  /**
-   * Proporción de la sesión reservada a repasar material antiguo, de 0 a 1.
-   * Con 0 cada cápsula sería estanca; con 0,4 casi la mitad de lo que ves al
-   * practicar una cápsula nueva son palabras de las anteriores.
-   */
+  /** Mezcla heredada, sin efecto; compatible con ajustes guardados. */
   mixRatio: number
   /** Exigir acentos y espíritus en las respuestas escritas. */
   strictDiacritics: boolean

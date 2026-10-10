@@ -406,7 +406,7 @@ test('repetir la cápsula 3 con «Repasar cápsula» no altera el SRS', () => {
   }
 })
 
-test('la sesión de la cápsula 3 mezcla material anterior y nunca futuro', () => {
+test('la sesión de la cápsula 3 contiene solo su contenido fijo', () => {
   const progress = new Map()
   completar('m01-s01-c01', progress)
   completar('m01-s01-c02', progress)
@@ -416,10 +416,8 @@ test('la sesión de la cápsula 3 mezcla material anterior y nunca futuro', () =
     capsuleId: 'm01-s01-c03',
   }, NOW)
 
-  const repasos = queue.filter((i) => !i.isNew)
-  assert.ok(repasos.length > 0, 'la sesión debería mezclar material anterior')
-  // Los repasos mezclados son solo de cápsulas ya presentadas.
-  assert.ok(repasos.every((i) => ['m01-s01-c01', 'm01-s01-c02'].includes(i.card.capsuleId)))
+  assert.deepEqual(queue.map((i) => i.card.id), cardsByCapsule.get('m01-s01-c03')!.map((c) => c.id))
+  assert.ok(queue.every((i) => i.fixedContent))
   // Y ninguna tarjeta de la cápsula 4 se cuela en la sesión de la 3.
   assert.ok(!queue.some((i) => i.card.capsuleId === 'm01-s01-c04'))
   // Todo el contenido de la sesión existe entre las 20 tarjetas presentadas.

@@ -172,7 +172,8 @@ export function letterDistractors(
 }
 
 /**
- * Qué forma muestra una tarjeta de letra en una aparición dada. Alterna de
+ * Variante exclusiva del repaso SRS de Tarjetas. En el camino se muestran
+ * juntas todas las formas, sin consultar las repeticiones. Aquí alterna de
  * forma determinista según `reps` —primera aparición mayúscula, siguiente
  * minúscula, y así— para que el aprendizaje inicial enseñe ambas formas sin
  * depender del azar.

@@ -66,7 +66,7 @@ test('responder correctamente no reencola: la cola principal nunca crece', () =>
 
 test('cada tarjeta correcta aparece una sola vez en la fase principal', () => {
   const run = createRun([item('a'), item('b'), item('a'), item('b')])
-  // Aunque la cola repita ids (mezcla), cada aparición se consume una vez.
+  // Incluso ante ids duplicados en la entrada, cada aparición se consume una vez.
   assert.equal(pasos(run), 4)
 })
 

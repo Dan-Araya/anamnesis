@@ -29,6 +29,7 @@ export default function CapsuleScreen({
   }
 
   const { capsule, module } = node
+  const total = statuses.find((s) => s.capsule.id === capsuleId)?.total ?? 0
   const completed = Boolean(
     statuses.find((s) => s.capsule.id === capsuleId)?.completed,
   )
@@ -63,6 +64,14 @@ export default function CapsuleScreen({
         >
           {completed ? 'Repasar cápsula' : 'Comenzar práctica'}
         </button>
+      )}
+
+      {!isEmpty(capsule) && (
+        <p className="muted small">
+          {total} ejercicios de esta cápsula, siempre completos. Hasta tres fallos
+          pueden repetirse una vez al final.
+          {completed && ' Repetirla es práctica libre y no cambia tus estadísticas.'}
+        </p>
       )}
 
       {capsule.letters.length > 0 && (

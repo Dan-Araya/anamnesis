@@ -52,22 +52,8 @@ export default function SettingsScreen() {
       <div className="card">
         <div className="campo">
           <div>
-            <div className="campo__label">Tarjetas nuevas al día</div>
-            <div className="muted small">Cuánto material fresco entra cada jornada.</div>
-          </div>
-          <input
-            type="number"
-            min={0}
-            max={100}
-            value={settings.newPerDay}
-            onChange={(e) => void updateSettings({ newPerDay: clamp(e.target.value, 0, 100) })}
-          />
-        </div>
-
-        <div className="campo">
-          <div>
             <div className="campo__label">Objetivo diario</div>
-            <div className="muted small">Tarjetas por sesión, repasos incluidos.</div>
+            <div className="muted small">Meta de respuestas para tus estadísticas. No limita las cápsulas; en Tarjetas también limita cada repaso SRS.</div>
           </div>
           <input
             type="number"
@@ -75,24 +61,6 @@ export default function SettingsScreen() {
             max={300}
             value={settings.dailyGoal}
             onChange={(e) => void updateSettings({ dailyGoal: clamp(e.target.value, 5, 300) })}
-          />
-        </div>
-
-        <div className="campo">
-          <div>
-            <div className="campo__label">Repaso mezclado</div>
-            <div className="muted small">
-              Qué parte de una cápsula nueva se dedica a repasar lo anterior. Con 0 cada
-              cápsula sería estanca.
-            </div>
-          </div>
-          <input
-            type="number"
-            min={0}
-            max={80}
-            step={10}
-            value={Math.round(settings.mixRatio * 100)}
-            onChange={(e) => void updateSettings({ mixRatio: clamp(e.target.value, 0, 80) / 100 })}
           />
         </div>
       </div>

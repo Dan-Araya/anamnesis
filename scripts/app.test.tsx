@@ -77,9 +77,9 @@ test('tocar una cápsula abre primero su material, y su botón inicia la prácti
   // El botón de la lección inicia la práctica.
   await user.click(screen.getByRole('button', { name: 'Comenzar práctica' }))
 
-  // La primera tarjeta es reconocer alfa, en su primera aparición: mayúscula.
+  // La primera tarjeta reconoce juntas las formas de alfa.
   await screen.findByText('¿Qué letra es?')
-  await user.click(screen.getByRole('button', { name: 'alfa mayúscula' }))
+  await user.click(screen.getByRole('button', { name: 'alfa' }))
   await user.click(await screen.findByRole('button', { name: 'Continuar' }))
 
   await waitFor(async () => {

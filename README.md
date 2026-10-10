@@ -13,12 +13,13 @@ El contenido tiene tres niveles: un **módulo** agrupa **secciones**, y una
 sección agrupa **cápsulas**. La cápsula es la unidad que se practica.
 
 La pantalla principal es **el camino**: un scroll continuo de nodos, uno por
-cápsula. Al pulsar un nodo se practica directamente, sin pantallas intermedias.
+cápsula. Al pulsar un nodo se abre su material y desde allí se inicia la práctica.
 Módulos y secciones no se visitan: son los rótulos que separan tramos.
 
-El avance es lineal. Una cápsula se abre cuando la anterior alcanza el umbral
-de dominio, y el camino sigue de una sección a la siguiente y de un módulo al
-siguiente sin cambiar de pantalla.
+El avance es lineal. Una cápsula se abre cuando todas las tarjetas activas de
+la anterior se han respondido al menos una vez, incluso con errores. El camino
+sigue de una sección a la siguiente y de un módulo al siguiente sin cambiar
+de pantalla.
 
 Las cuatro pestañas:
 
@@ -27,30 +28,34 @@ Las cuatro pestañas:
 | **Camino**   | Avanzar. Es donde entra el material nuevo                        |
 | **Tarjetas** | Repasar lo ya visto de todas las cápsulas, con la racha del día  |
 | **Progreso** | Historial, precisión y previsión de repasos                      |
-| **Ajustes**  | Ritmo diario, mezcla, diacríticos, copias de seguridad           |
+| **Ajustes**  | Objetivo diario, diacríticos, copias de seguridad           |
 
-## Nada se da por sabido
+## Cápsulas fijas y repaso separado
 
-Terminar una cápsula no la archiva. Al practicar una cápsula nueva, parte de la
-sesión se dedica a material de las anteriores, para que lo aprendido siga
-volviendo:
+Cada práctica del camino contiene **todas las tarjetas activas de la cápsula
+seleccionada**, una vez y en orden de contenido. No entran tarjetas de otras
+cápsulas ni se omiten ejercicios por progreso previo, vencimientos, objetivo
+diario o límite de nuevas. Volver tras dos semanas ofrece la misma lección.
+Una cápsula parcialmente respondida también se practica completa, conservando
+las respuestas ya guardadas; no hay reanudación de una cola interrumpida.
 
-1. Entran **todas las tarjetas vencidas**, las más atrasadas primero.
-2. Si no bastan para llenar la proporción de repaso (**40 % por defecto**,
-   ajustable de 0 a 80 %), se **adelantan repasos** que aún no tocaban,
-   empezando por los de la misma sección y los más próximos a vencer.
+La cola principal queda fija al comenzar y el contador conserva su denominador.
+Al terminar, hasta tres tarjetas distintas falladas reaparecen una sola vez en
+una fase de **refuerzo** separada, sin bucles. Responder todas las tarjetas
+activas al menos una vez completa la cápsula y abre la siguiente; los errores
+nunca la vuelven a bloquear.
 
-Adelantar un repaso no falsea la programación: acertar una tarjeta mucho antes
-de tiempo la refresca pero **no alarga su intervalo** (`EARLY_THRESHOLD` en
-`src/lib/srs.ts`). Fallarla, en cambio, sí la penaliza siempre.
+**Repasar cápsula** repite el contenido completo como práctica libre: ni la
+cola principal ni el refuerzo modifican progreso SRS, historial o estadísticas.
+En la práctica normal se registran todas las respuestas y se conserva la
+programación SRS interna por compatibilidad.
 
-Dentro de una misma sesión el recorrido tiene dos fases. La **cola principal**
-queda fija al comenzar: cada tarjeta aparece una sola vez, una respuesta
-correcta nunca la vuelve a encolar —aunque la tarjeta siga en aprendizaje— y
-el contador no cambia de denominador. Al terminar, las tarjetas falladas
-—hasta tres distintas— reaparecen una única vez en una fase de **refuerzo**;
-las que sigan fallando y las que no cupieron quedan programadas por el SRS
-para cápsulas posteriores, sin desmarcar la cápsula.
+La pestaña **Tarjetas** ofrece exclusivamente el repaso SRS de tarjetas vistas
+y vencidas, ordenadas por vencimiento. Conserva su límite por sesión, igual al
+objetivo diario, indicado en Ajustes y en Tarjetas. La meta diaria y la racha
+siguen contando respuestas normales, sin recortar ni alargar cápsulas. Los
+ajustes heredados `newPerDay` y `mixRatio` se conservan al guardar, pero ya no
+se ofrecen en la interfaz ni gobiernan el camino.
 
 ## Comandos
 
@@ -178,9 +183,14 @@ ahora es básica —no representa acentos ni espíritus— y conserva
 correspondencias como θ → th o η → ē. Cada letra declara la suya en el campo
 `transliteration`.
 
-El formato de la pregunta se endurece según se asienta la tarjeta: primero
-opción múltiple, después escribir la forma de memoria o autoevaluarse con una
-flashcard.
+En el camino el formato depende únicamente del tipo: reconocer vocabulario,
+transliterar y reconocer/producir letras usan opción múltiple; producir
+vocabulario y morfología usan escritura; las frases usan traducción y las
+tablas completas, huecos. Las letras muestran juntas mayúscula y minúscula
+al reconocerlas (también sigma final `ς`); producir pide la minúscula. El
+feedback identifica las variantes. No se crean ids adicionales. Los
+vencimientos y repeticiones solo afectan al repaso separado de Tarjetas,
+que conserva sus formatos y alternancia de variantes SRS.
 
 Para las respuestas en griego hay un teclado politónico en pantalla: pulsa la
 letra y luego los diacríticos, o al revés —el acento delante, como en el
@@ -191,8 +201,8 @@ El campo sigue siendo editable, así que tocarlo abre el teclado del sistema y
 se puede alternar entre los dos a mitad de palabra: las teclas de pantalla
 escriben en la posición del cursor sin robar el foco.
 
-La repetición espaciada es SM-2 con pasos de aprendizaje, el mismo esquema de
-Anki: notas de 1 a 4 e intervalos crecientes.
+El repaso de Tarjetas usa SM-2 con pasos de aprendizaje: notas de 1 a 4
+e intervalos crecientes. Esta programación no gobierna los ejercicios del camino.
 
 ## Publicar e instalar en el móvil
 

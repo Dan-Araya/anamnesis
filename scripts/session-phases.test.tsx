@@ -42,10 +42,10 @@ async function responder(user: Usuario, correcta = true) {
 
   if (hint.includes('¿Qué letra es?')) {
     const glyph = document.querySelector('.prompt__greek')?.textContent ?? ''
-    const nombre = nombrePorForma.get(glyph)
+    const nombre = nombrePorForma.get(glyph.split(' · ')[0]!)
     assert.ok(nombre, `no se reconoció la letra «${glyph}»`)
     const variante = mayusculas.has(glyph) ? 'mayúscula' : 'minúscula'
-    const objetivo = `${nombre} ${variante}`
+    const objetivo = glyph.includes(' · ') ? nombre! : `${nombre} ${variante}`
     if (correcta) {
       await user.click(screen.getByRole('button', { name: objetivo }))
     } else {
@@ -118,11 +118,12 @@ test('fallar dos tarjetas abre una fase de refuerzo de dos, sin reencolar', asyn
 
   // El contador principal ya no está; aparece la fase separada con el suyo.
   await waitFor(() => assert.equal(contador(), 'Refuerzo 1/2'))
+  assert.equal(document.querySelector('.prompt__greek')?.textContent, 'Α · α')
   await responder(user, false) // vuelve a fallar: no se reencola
   await waitFor(() => assert.equal(contador(), 'Refuerzo 2/2'))
   await responder(user) // acierta el segundo refuerzo
 
-  await screen.findByText('Terminaste la cápsula. 2 elementos volverán más adelante.')
+  await screen.findByText('Terminaste la cápsula. 2 elementos necesitan más práctica.')
   // 6 respuestas principales + 2 de refuerzo, todas persistidas.
   assert.equal((await getAllReviews()).length, 8)
 })
@@ -150,7 +151,7 @@ test('fallarlo todo termina tras 6 + 3 y la cápsula queda completada igualmente
   await responder(user, false)
 
   // El mensaje cuenta tarjetas distintas falladas, no respuestas erróneas.
-  await screen.findByText('Terminaste la cápsula. 6 elementos volverán más adelante.')
+  await screen.findByText('Terminaste la cápsula. 6 elementos necesitan más práctica.')
   assert.equal((await getAllReviews()).length, 9)
 
   // La cápsula queda completada tras el recorrido principal y la siguiente

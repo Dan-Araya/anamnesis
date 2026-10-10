@@ -9,7 +9,7 @@ import type { SessionItem } from '@/lib/progression'
  * aprendizaje. Las tarjetas falladas se registran como candidatas y, al
  * terminar la cola, las primeras MAX_REFUERZOS reaparecen una única vez en
  * una fase de refuerzo separada. Fallar de nuevo en el refuerzo no reencola:
- * la programación SRS decide cuándo vuelve cada tarjeta. Si no hay fallos no
+ * el repaso SRS queda por separado en Tarjetas. Si no hay fallos no
  * existe fase de refuerzo.
  */
 

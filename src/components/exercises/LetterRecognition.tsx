@@ -13,7 +13,8 @@ import {
 /**
  * Reconocer la letra: se muestra su forma —mayúscula, minúscula o, si la
  * letra tiene forma final, también esa variante; es la misma tarjeta— y hay
- * que elegir su nombre entre opciones. La variante alterna de forma
+ * que elegir su nombre entre opciones. En el camino muestra juntas todas
+ * las formas; solo en Tarjetas la variante alterna de forma
  * determinista según las repeticiones (primera aparición mayúscula), así que
  * a lo largo de los repasos sucesivos se acaban viendo todas las formas, no
  * necesariamente dentro de la primera sesión. La respuesta es objetiva:
@@ -45,8 +46,13 @@ export default function LetterRecognition({
   const letter = getLetter(item.card.sourceId)
   if (!letter) return <p className="vacio">Falta la letra de esta tarjeta.</p>
 
-  const variante = letterFormForReps(letter, item.progress.reps)
-  const ui = variantUi(letter, variante)
+  // En el camino se reconocen juntas todas las formas de la misma letra.
+  // Tarjetas conserva sus variantes SRS existentes.
+  const variante = item.fixedContent ? 'mayuscula' : letterFormForReps(letter, item.progress.reps)
+  const ui = item.fixedContent
+    ? { glyph: [letter.uppercase, letter.lowercase, letter.finalForm].filter(Boolean).join(' · '),
+        caseLabel: '', distractVariant: 'nombre' as const }
+    : variantUi(letter, variante)
   const [picked, setPicked] = useState<string | null>(null)
 
   const options = useMemo(() => {
@@ -55,10 +61,10 @@ export default function LetterRecognition({
     // («sigma»): añadir «final» la delataría entre nombres sin calificadores.
     // El calificador aparece solo en el feedback posterior a la respuesta.
     const targetLabel =
-      variante === 'final' ? letter.name : `${letter.name} ${ui.caseLabel}`
+      item.fixedContent || variante === 'final' ? letter.name : `${letter.name} ${ui.caseLabel}`
     return shuffle([{ id: letter.id, label: targetLabel }, ...pool])
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [letter.id, item.card.capsuleId, variante])
+  }, [letter.id, item.card.capsuleId, variante, item.fixedContent])
 
   const answered = picked !== null
   const correct = picked === letter.id
@@ -99,6 +105,12 @@ export default function LetterRecognition({
               <span>
                 es {letter.name} {ui.caseLabel} — {letter.phonetic}
               </span>
+              {item.fixedContent && (
+                <div className="small muted">
+                  {letter.uppercase} mayúscula · {letter.lowercase} minúscula
+                  {letter.finalForm && ` · ${letter.finalForm} final, usada al final de palabra`}
+                </div>
+              )}
               <div className="small muted">{letter.pronunciation}</div>
             </div>
             <button

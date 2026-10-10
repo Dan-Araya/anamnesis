@@ -11,6 +11,7 @@ import type {
 import {
   computeStatuses,
   pickMode,
+  pickCapsuleMode,
   selectQueue,
   type CapsuleEntry,
 } from '../src/lib/progression'
@@ -193,76 +194,46 @@ test('el camino continúa de un módulo al siguiente', () => {
 })
 
 // ---------------------------------------------------------------------------
-// La mezcla de material nuevo con el ya visto
+// Las cápsulas fijas y el repaso separado
 // ---------------------------------------------------------------------------
 
-test('practicar una cápsula nueva arrastra repaso de las anteriores', () => {
-  const entries = camino(6, 6)
-  const progress = new Map<string, CardProgress>()
-  // La primera cápsula ya está hecha y sus tarjetas aún no han vencido.
-  dominar(entries[0]!, progress)
-
-  const statuses = computeStatuses(entries, progress, NOW)
-  const segunda = entries[1]!.capsule.id
-  const queue = selectQueue(entries, statuses, progress, settings, { capsuleId: segunda }, NOW)
-
-  const nuevas = queue.filter((i) => i.isNew)
-  const repasos = queue.filter((i) => !i.isNew)
-
-  // Lo nuevo sale solo de la cápsula elegida…
-  assert.ok(nuevas.every((i) => i.card.capsuleId === segunda))
-  // …y lo antiguo se cuela aunque todavía no tocase repasarlo.
-  assert.ok(repasos.length > 0, 'la sesión debería mezclar material anterior')
-  assert.ok(repasos.every((i) => i.card.capsuleId === entries[0]!.capsule.id))
-  // El material anterior vuelve siempre como pregunta objetiva, nunca Anki.
-  assert.ok(
-    repasos.every((i) => pickMode(i.card, i.progress) === 'opcion-multiple'),
-    'el repaso debería ser de opción múltiple',
-  )
-
-  // La proporción se acerca al ajuste (0,4 → cuatro de cada diez).
-  const ratio = repasos.length / queue.length
-  assert.ok(ratio > 0.25 && ratio < 0.55, `proporción inesperada: ${ratio}`)
-})
-
-test('con la mezcla a cero la cápsula es estanca', () => {
-  const entries = camino(6, 6)
+test('dos semanas de ausencia no añaden vencidos ni adelantan tarjetas', () => {
+  const entries = camino(100, 7, 7)
   const progress = new Map<string, CardProgress>()
   dominar(entries[0]!, progress)
-
-  const statuses = computeStatuses(entries, progress, NOW)
-  const queue = selectQueue(
-    entries,
-    statuses,
-    progress,
-    { ...settings, mixRatio: 0 },
-    { capsuleId: entries[1]!.capsule.id },
-    NOW,
-  )
-
-  assert.ok(queue.every((i) => i.isNew))
+  for (const [id, p] of progress) progress.set(id, { ...p, due: NOW - DAY })
+  const later = NOW + 14 * DAY
+  const queue = selectQueue(entries, computeStatuses(entries, progress, later), progress,
+    { ...settings, dailyGoal: 1, newPerDay: 0, mixRatio: 0.8 },
+    { capsuleId: entries[1]!.capsule.id, newToday: 999 }, later)
+  assert.deepEqual(queue.map((i) => i.card.id), entries[1]!.cards.map((c) => c.id))
+  assert.equal(new Set(queue.map((i) => i.card.id)).size, 7)
 })
 
-test('los repasos vencidos entran enteros, aunque superen la proporción', () => {
-  const entries = camino(20, 4)
+test('ids, cantidad y modos son iguales con progreso vacío, parcial y completo', () => {
+  const entry = camino(8)[0]!
+  const kinds: Card['kind'][] = ['vocab-reconocer', 'vocab-producir', 'vocab-transliterar',
+    'letra-reconocer', 'letra-producir', 'morfologia', 'traduccion', 'tabla']
+  entry.cards = entry.cards.map((c, i) => ({ ...c, kind: kinds[i]! }))
   const progress = new Map<string, CardProgress>()
-  // Toda la primera cápsula vencida hace días.
-  for (const card of entries[0]!.cards) {
-    const p = schedule(newProgress(card, NOW), 4, NOW)
-    progress.set(card.id, { ...p, due: NOW - 3 * DAY })
-  }
-
-  const statuses = computeStatuses(entries, progress, NOW)
-  const queue = selectQueue(
-    entries,
-    statuses,
-    progress,
-    settings,
-    { capsuleId: entries[1]!.capsule.id },
-    NOW,
-  )
-
-  assert.equal(queue.filter((i) => !i.isNew).length, 20)
+  const signature = () => selectQueue([entry], computeStatuses([entry], progress, NOW),
+    progress, { ...settings, dailyGoal: 1, newPerDay: 0 }, { capsuleId: entry.capsule.id }, NOW)
+    .map((i) => [i.card.id, i.mode, i.fixedContent])
+  const before = signature()
+  const snapshot = () => new Map([...progress].map(([id, p]) => [id, { ...p }]))
+  for (const c of entry.cards.slice(0, 4)) progress.set(c.id, schedule(newProgress(c, NOW), 1, NOW))
+  const partial = snapshot()
+  assert.deepEqual(signature(), before)
+  assert.deepEqual(progress, partial)
+  dominar(entry, progress)
+  const complete = snapshot()
+  assert.deepEqual(signature(), before)
+  assert.deepEqual(progress, complete)
+  for (const [id, p] of progress) progress.set(id, { ...p, reps: 99, due: NOW - 14 * DAY, interval: 100 })
+  assert.deepEqual(signature(), before)
+  assert.deepEqual(before.map((i) => i[1]), ['opcion-multiple', 'escribir', 'opcion-multiple',
+    'opcion-multiple', 'opcion-multiple', 'escribir', 'traducir', 'huecos'])
+  assert.ok(entry.cards.every((c, i) => pickCapsuleMode(c) === before[i]![1]))
 })
 
 test('el repaso global no introduce material nuevo', () => {
@@ -279,20 +250,20 @@ test('el repaso global no introduce material nuevo', () => {
   assert.equal(queue[0]!.isNew, false)
 })
 
-test('la sesión respeta el límite diario de tarjetas nuevas', () => {
+test('sin cápsula explícita se practica la actual completa', () => {
   const entries = camino(50)
   const statuses = computeStatuses(entries, new Map(), NOW)
   const queue = selectQueue(entries, statuses, new Map(), settings, {}, NOW)
 
-  assert.equal(queue.length, settings.newPerDay)
+  assert.equal(queue.length, 50)
 })
 
-test('las nuevas ya vistas hoy descuentan del cupo', () => {
+test('el cupo heredado de nuevas no recorta la cápsula actual', () => {
   const entries = camino(50)
   const statuses = computeStatuses(entries, new Map(), NOW)
   const queue = selectQueue(entries, statuses, new Map(), settings, { newToday: 7 }, NOW)
 
-  assert.equal(queue.length, 3)
+  assert.equal(queue.length, 50)
 })
 
 test('no se introduce material de cápsulas bloqueadas', () => {
@@ -371,10 +342,8 @@ test('la cápsula elegida entra entera aunque el cupo diario esté cubierto', ()
   assert.equal(nuevas.length, 7)
   assert.ok(nuevas.every((i) => i.card.capsuleId === entries[1]!.capsule.id))
 
-  // El objetivo diario recorta primero los repasos añadidos de la mezcla,
-  // nunca el material nuevo imprescindible.
-  assert.ok(queue.length <= 8)
-  assert.equal(queue.filter((i) => !i.isNew).length, 1)
+  assert.equal(queue.length, 7)
+  assert.equal(queue.filter((i) => !i.isNew).length, 0)
 })
 
 test('repetir una cápsula completada sin vencidos no produce una sesión vacía', () => {
@@ -385,7 +354,7 @@ test('repetir una cápsula completada sin vencidos no produce una sesión vacía
   const statuses = computeStatuses(entries, progress, NOW)
   const objetivo = entries[0]!.capsule.id
 
-  // Sin repetición voluntaria no hay nada que hacer: nada vence ni es nuevo.
+  // El contenido completo entra incluso sin la opción heredada de repetición.
   const sinRepeticion = selectQueue(
     entries,
     statuses,
@@ -394,7 +363,7 @@ test('repetir una cápsula completada sin vencidos no produce una sesión vacía
     { capsuleId: objetivo },
     NOW,
   )
-  assert.equal(sinRepeticion.length, 0)
+  assert.equal(sinRepeticion.length, 6)
 
   // «Repasar cápsula» construye una sesión con las tarjetas de la propia
   // cápsula, sin material futuro, siempre como preguntas objetivas.
@@ -415,4 +384,30 @@ test('repetir una cápsula completada sin vencidos no produce una sesión vacía
   const despues = computeStatuses(entries, progress, NOW)
   assert.equal(despues[0]!.completed, true)
   assert.equal(despues[1]!.unlocked, true)
+})
+
+
+test('Tarjetas conserva vencimientos, orden, modos SRS y límite de repaso', () => {
+  const entry = camino(5)[0]!
+  entry.cards[0] = { ...entry.cards[0]!, kind: 'morfologia' }
+  const progress = new Map<string, CardProgress>()
+  for (const [i, card] of entry.cards.slice(0, 4).entries()) {
+    progress.set(card.id, { ...schedule(newProgress(card, NOW), 3, NOW), due: NOW - (4 - i) * DAY })
+  }
+  progress.set(entry.cards[3]!.id, { ...progress.get(entry.cards[3]!.id)!, due: NOW + DAY })
+  const statuses = computeStatuses([entry], progress, NOW)
+  const queue = selectQueue([entry], statuses, progress, { ...settings, dailyGoal: 2 }, { onlyReviews: true }, NOW)
+  assert.deepEqual(queue.map((i) => i.card.id), entry.cards.slice(0, 2).map((c) => c.id))
+  assert.equal(queue[0]!.mode, 'escribir')
+  assert.ok(queue.every((i) => !i.fixedContent && !i.isNew))
+  const unlimited = selectQueue([entry], statuses, progress, settings, { onlyReviews: true, unlimited: true }, NOW)
+  assert.equal(unlimited.length, 3)
+})
+
+test('una cápsula bloqueada o inexistente nunca produce ejercicios', () => {
+  const entries = camino(4, 4)
+  const statuses = computeStatuses(entries, new Map(), NOW)
+  for (const capsuleId of [entries[1]!.capsule.id, 'inexistente']) {
+    assert.deepEqual(selectQueue(entries, statuses, new Map(), settings, { capsuleId }, NOW), [])
+  }
 })

@@ -9,9 +9,9 @@ o reiniciar el progreso existente.
 
 - El recorrido empieza desde cero para que también sirva a quien nunca ha leído
   griego, aunque el primer usuario ya conozca el alfabeto.
-- Cada cápsula introduce poco material nuevo y la cola SRS mezcla lo recién
-  aprendido con tarjetas de cápsulas anteriores. La proporción predeterminada
-  de repaso sigue siendo 40 %.
+- Cada cápsula ofrece un conjunto fijo y breve de ejercicios de su contenido,
+  independiente del progreso y del tiempo transcurrido. El repaso SRS de
+  material anterior se realiza por separado en Tarjetas.
 - Las letras se presentan en el orden alfabético real, de alfa a omega.
 - Una letra comprende tres datos distintos: su forma, su nombre y su valor
   fonético básico. No deben confundirse el nombre de la letra y el sonido que
@@ -71,9 +71,9 @@ el contenido; este plan no cambia todavía los tipos ni genera tarjetas nuevas.
 ## Módulo 1 — Leer el alfabeto
 
 El módulo tendrá una sola sección, **El alfabeto**, con nueve cápsulas: ocho
-grupos de tres letras y una consolidación. Tres letras por cápsula mantienen la
-carga cerca del límite predeterminado de diez tarjetas nuevas diarias, incluso
-al sumar una palabra breve.
+grupos de tres letras y una consolidación. Tres letras por cápsula mantienen
+una lección breve y previsible, incluso al sumar una palabra. Los límites
+diarios no fragmentan las cápsulas.
 
 | Cápsula | Letras nuevas | Vocabulario real | Objetivo adicional |
 | --- | --- | --- | --- |
@@ -100,8 +100,10 @@ honestidad y evitar equivalencias engañosas.
    minúscula y reconocimiento auditivo. La mayúscula es reconocimiento-only.
 4. Cuando corresponde, se introduce la palabra real al final del material
    nuevo de la cápsula.
-5. La sesión SRS intercala automáticamente tarjetas anteriores. No hace falta
-   crear bloques manuales de repaso en cada cápsula.
+5. La práctica incluye todas las tarjetas activas de la cápsula una vez, sin
+   mezcla automática. Reconocer muestra juntas mayúscula, minúscula y sigma
+   final cuando existe; producir pide la minúscula. Hasta tres falladas se
+   repiten una vez al final. Tarjetas ofrece el repaso SRS por separado.
 6. La cápsula 9 no introduce letras: comprueba orden, variantes y lectura
    acumulativa antes de abrir la sección siguiente.
 

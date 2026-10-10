@@ -2,9 +2,9 @@
 
 ## Proyecto
 
-Anamnesis es una PWA de práctica diaria de griego antiguo por repetición
-espaciada (SRS), de uso personal y publicación abierta. El progreso de estudio
-se guarda en el dispositivo. La siguiente etapa del producto incorporará un
+Anamnesis es una PWA de práctica diaria de griego antiguo con cápsulas de
+contenido fijo y repaso SRS separado, de uso personal y publicación abierta.
+El progreso de estudio se guarda en el dispositivo. La siguiente etapa del producto incorporará un
 cupo gratuito online y derechos Pro con práctica ilimitada y offline; su
 contrato está en `docs/contrato-sesiones-pro.md`. El frontend se despliega
 como sitio estático en GitHub Pages.
@@ -22,10 +22,16 @@ como sitio estático en GitHub Pages.
   `idb`), indexada por el `id` de cada tarjeta. Se puede respaldar mediante
   export/import JSON o, con una cuenta opcional, guardar y restaurar una copia
   privada en Supabase. No existe sincronización automática entre dispositivos.
+- **Camino**: `src/lib/progression.ts` decide el desbloqueo por respuestas y
+  presenta todas las tarjetas activas de la cápsula elegida una vez, sin
+  mezcla ni límites diarios. Los modos dependen del tipo de contenido; las
+  letras se reconocen con sus formas juntas. Hasta tres falladas se repiten
+  una vez en un refuerzo separado. Repetir una completada es práctica libre.
 - **Repetición espaciada**: `src/lib/srs.ts` (variante SM-2 con pasos de
-  aprendizaje). `src/lib/progression.ts` decide qué cápsulas están
-  desbloqueadas y arma la cola de cada sesión, mezclando material antiguo
-  con el nuevo.
+  aprendizaje) conserva la programación y el registro de respuestas normales.
+  Solo gobierna el repaso de la pestaña Tarjetas, con su límite por sesión.
+  El objetivo diario y la racha siguen siendo estadísticas; `newPerDay` y
+  `mixRatio` se conservan en los ajustes guardados, sin efecto en el camino.
 
 ## Restricciones del proyecto
 

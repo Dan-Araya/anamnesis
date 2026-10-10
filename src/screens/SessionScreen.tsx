@@ -24,7 +24,7 @@ import VocabTransliterate from '@/components/exercises/VocabTransliterate'
  * comenzar: cada tarjeta aparece una sola vez y el contador nunca cambia de
  * denominador. Al terminarla, las tarjetas falladas —hasta tres distintas—
  * reaparecen una única vez en una fase de refuerzo separada; las demás
- * falladas quedan programadas por el SRS para cápsulas posteriores.
+ * falladas pueden repasarse por separado en Tarjetas.
  *
  * Con `freePractice` (el botón «Repasar cápsula») la sesión es práctica libre:
  * nada se persiste —ni CardProgress, ni ReviewLog, ni DailyStat— y solo se
@@ -46,8 +46,7 @@ export default function SessionScreen({
 }) {
   const { settings, progress, statuses, today, review } = useStore()
 
-  // La práctica libre es la única vía para que las tarjetas de una cápsula
-  // completada entren aunque nada esté vencido.
+  // Repetir una cápsula completada conserva la neutralidad persistente.
   const practicaLibre = Boolean(freePractice)
 
   // La cola se fija al entrar: que no se reordene sola mientras respondes.
@@ -92,9 +91,9 @@ export default function SessionScreen({
     const next = await review({ card: item.card, grade, mode: item.mode, durationMs })
     setRun((r) =>
       advance(r, grade, {
-        card: item.card,
+        ...item,
         progress: next,
-        mode: pickMode(item.card, next),
+        mode: item.fixedContent ? item.mode : pickMode(item.card, next),
         isNew: false,
       }),
     )
@@ -208,16 +207,15 @@ function Resumen({
   const mensaje = useMemo(() => {
     if (empty) return 'No hay nada pendiente ahora mismo.'
     if (failed > 0) {
-      // No punitivo: los errores no desmarcan la cápsula; el SRS los traerá
-      // de vuelta más adelante.
+      // Los errores no desmarcan la cápsula.
       return practicaLibre
         ? `Repaso terminado. ${failed} ${failed === 1 ? 'elemento necesita más práctica' : 'elementos necesitan más práctica'}.`
-        : `Terminaste la cápsula. ${failed} ${failed === 1 ? 'elemento volverá' : 'elementos volverán'} más adelante.`
+        : `${capsuleId ? 'Terminaste la cápsula.' : 'Repaso terminado.'} ${failed} ${failed === 1 ? 'elemento necesita más práctica' : 'elementos necesitan más práctica'}.`
     }
     if (accuracy >= 90) return '¡Excelente!'
     if (accuracy >= 70) return 'Buen trabajo.'
     return 'Sesión terminada.'
-  }, [accuracy, empty, failed, practicaLibre])
+  }, [accuracy, empty, failed, practicaLibre, capsuleId])
 
   return (
     <div className="screen screen--full">
@@ -249,7 +247,7 @@ function Resumen({
 
       <div className="stack" style={{ marginTop: 20 }}>
         <button type="button" className="btn btn--primary btn--wide" onClick={onExit}>
-          Volver al camino
+          {capsuleId ? 'Volver al camino' : 'Volver a Tarjetas'}
         </button>
         {capsuleId && onOpenMaterial && (
           <button

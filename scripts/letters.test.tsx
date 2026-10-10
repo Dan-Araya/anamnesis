@@ -15,6 +15,9 @@ import {
   logReview,
   resetAll,
   saveManyProgress,
+  exportBackup,
+  saveSettings,
+  DEFAULT_SETTINGS,
 } from '../src/lib/db'
 import { newProgress, schedule } from '../src/lib/srs'
 import LetterRecognition from '../src/components/exercises/LetterRecognition'
@@ -67,10 +70,10 @@ async function responder(user: Usuario, correcta = true) {
   if (hint.includes('¿Qué letra es?')) {
     // Reconocer: la forma mostrada pide su nombre con su variante.
     const glyph = document.querySelector('.prompt__greek')?.textContent ?? ''
-    const nombre = nombrePorForma.get(glyph)
+    const nombre = nombrePorForma.get(glyph.split(' · ')[0]!)
     assert.ok(nombre, `no se reconoció la letra «${glyph}»`)
     const variante = mayusculas.has(glyph) ? 'mayúscula' : 'minúscula'
-    const objetivo = `${nombre} ${variante}`
+    const objetivo = glyph.includes(' · ') ? nombre! : `${nombre} ${variante}`
     if (correcta) {
       await user.click(screen.getByRole('button', { name: objetivo }))
     } else {
@@ -186,10 +189,9 @@ test('la cápsula 2 se completa entera el mismo día, sin que el cupo la parta',
   await screen.findByText(/delta mayúscula/)
   await user.click(screen.getByRole('button', { name: 'Comenzar práctica' }))
 
-  // 8 tarjetas nuevas (una aparición cada una) + 5 repasos mezclados de la
-  // cápsula anterior. Si el cupo hubiera recortado las nuevas, la sesión
+  // 8 tarjetas de la propia cápsula, una aparición cada una. Si el cupo hubiera recortado las nuevas, la sesión
   // terminaría antes y la cápsula no quedaría completada.
-  for (let i = 0; i < 13; i++) await responder(user)
+  for (let i = 0; i < 8; i++) await responder(user)
 
   await screen.findByText('¡Excelente!')
   await user.click(screen.getByRole('button', { name: 'Volver al camino' }))
@@ -423,9 +425,8 @@ test('las cápsulas 3 y 4 se completan el mismo día y abren la siguiente', asyn
   await screen.findByText(/^eta mayúscula/)
   await user.click(screen.getByRole('button', { name: 'Comenzar práctica' }))
 
-  // 8 tarjetas nuevas (una aparición cada una) + 5 repasos mezclados de lo
-  // anterior. Nada de la cápsula 4 se cuela en esta sesión.
-  for (let i = 0; i < 13; i++) await responder(user)
+  // 8 tarjetas de la propia cápsula, una aparición cada una. Nada de la cápsula 4 se cuela en esta sesión.
+  for (let i = 0; i < 8; i++) await responder(user)
 
   await screen.findByText('¡Excelente!')
   await user.click(screen.getByRole('button', { name: 'Volver al camino' }))
@@ -438,7 +439,7 @@ test('las cápsulas 3 y 4 se completan el mismo día y abren la siguiente', asyn
   await screen.findByText(/^kappa mayúscula/)
   await user.click(screen.getByRole('button', { name: 'Comenzar práctica' }))
 
-  for (let i = 0; i < 13; i++) await responder(user)
+  for (let i = 0; i < 8; i++) await responder(user)
 
   await screen.findByText('¡Excelente!')
   await user.click(screen.getByRole('button', { name: 'Volver al camino' }))
@@ -451,3 +452,73 @@ test('las cápsulas 3 y 4 se completan el mismo día y abren la siguiente', asyn
   await user.click(screen.getByRole('button', { name: 'Kappa, lambda y mi — Κ Λ Μ (completada)' }))
   assert.ok(await screen.findByRole('button', { name: 'Repasar cápsula' }))
 }, 60_000)
+
+
+test('en el camino las formas de alfa y sigma son estables con cualquier progreso', async () => {
+  const user = userEvent.setup()
+  for (const [id, glyphs, name] of [
+    ['l:alpha:rec', 'Α · α', 'alfa'],
+    ['l:sigma:rec', 'Σ · σ · ς', 'sigma'],
+  ]) {
+    const card = allCards.find((c) => c.id === id)!
+    for (const reps of [0, 1, 2, 99]) {
+      const { unmount } = render(
+        <LetterRecognition
+          item={{ card, progress: { ...newProgress(card), reps, due: Date.now() - 14 * 86_400_000 },
+            mode: 'opcion-multiple', isNew: reps === 0, fixedContent: true }}
+          onGraded={() => {}}
+        />,
+      )
+      assert.equal(document.querySelector('.prompt__greek')?.textContent, glyphs)
+      const labels = [...document.querySelectorAll('.options .option')].map((b) => b.textContent)
+      assert.equal(new Set(labels).size, labels.length)
+      assert.ok(labels.every((label) => !/mayúscula|minúscula|final/.test(label ?? '')))
+      await user.click(screen.getByRole('button', { name }))
+      assert.ok(screen.getByText(/mayúscula · .* minúscula/))
+      if (name === 'sigma') assert.ok(screen.getByText(/ς final, usada al final de palabra/))
+      unmount()
+    }
+  }
+})
+
+test('volver a una parcial tras dos semanas conserva datos y ofrece toda la cápsula', async () => {
+  const old = Date.now() - 14 * 86_400_000
+  const first = cardsByCapsule.get('m01-s01-c01')!
+  const second = cardsByCapsule.get('m01-s01-c02')!
+  await saveManyProgress([
+    ...first.map((card) => schedule(newProgress(card, old), 1, old)),
+    schedule(newProgress(second[0]!, old), 3, old),
+  ])
+  await saveSettings({ ...DEFAULT_SETTINGS, dailyGoal: 5, newPerDay: 0, mixRatio: 0.8 })
+  const before = await exportBackup()
+  const user = userEvent.setup()
+  render(<StoreProvider><App /></StoreProvider>)
+  await user.click(await screen.findByRole('button', { name: 'Delta, épsilon y dseta — Δ Ε Ζ' }))
+  await user.click(screen.getByRole('button', { name: 'Comenzar práctica' }))
+  assert.equal(document.querySelector('.session__bar .small')?.textContent, '0/8')
+  assert.equal(document.querySelector('.prompt__greek')?.textContent, 'Δ · δ')
+  const atStart = await exportBackup()
+  assert.deepEqual(atStart.progress, before.progress)
+  assert.deepEqual(atStart.reviews, before.reviews)
+  assert.deepEqual(atStart.daily, before.daily)
+  assert.deepEqual(atStart.settings, before.settings)
+  for (let i = 0; i < 8; i++) await responder(user)
+  await screen.findByText('¡Excelente!')
+  const after = await exportBackup()
+  for (const card of first) {
+    assert.deepEqual(after.progress.find((p) => p.cardId === card.id), before.progress.find((p) => p.cardId === card.id))
+  }
+  assert.equal(after.reviews.length, before.reviews.length + 8)
+  assert.equal(after.daily[0]!.reviews, 8)
+  assert.deepEqual(after.settings, before.settings)
+  await user.click(screen.getByRole('button', { name: 'Volver al camino' }))
+  await user.click(screen.getByRole('button', { name: 'Tarjetas' }))
+  assert.ok(await screen.findByRole('button', { name: 'Repasar · 5 tarjetas' }))
+  await user.click(screen.getByRole('button', { name: 'Repasar · 5 tarjetas' }))
+  await screen.findByText('¿Qué letra es?')
+  assert.equal(document.querySelector('.session__bar .small')?.textContent, '0/5')
+  // El repaso separado conserva la variante SRS de alfa (reps = 1).
+  assert.equal(document.querySelector('.prompt__greek')?.textContent, 'α')
+  await responder(user)
+  assert.equal((await getAllReviews()).length, after.reviews.length + 1)
+})
