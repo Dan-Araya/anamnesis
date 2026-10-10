@@ -464,6 +464,77 @@
             "La palabra ψυχή reúne psi, upsilon, chi y eta.",
             "psychē es transliteración, no pronunciación española. El acento visible se estudiará después y no se evalúa todavía."
           ]
+        },
+        {
+          "id": "m01-s01-c09",
+          "number": 9,
+          "title": "Ya puedes leer griego",
+          "letters": [],
+          "vocabulary": [],
+          "paradigms": [],
+          "sentences": [],
+          "grammar": [],
+          "drills": [],
+          "alphabetReference": true,
+          "consolidation": [
+            {
+              "id": "alphabet-rho-lowercase",
+              "task": "minuscula",
+              "sourceId": "rho",
+              "distractorIds": [
+                "pi",
+                "nu",
+                "sigma"
+              ]
+            },
+            {
+              "id": "alphabet-sigma-forms",
+              "task": "nombre",
+              "sourceId": "sigma",
+              "distractorIds": [
+                "rho",
+                "xi",
+                "psi"
+              ]
+            },
+            {
+              "id": "alphabet-poiesis-final",
+              "task": "final",
+              "sourceId": "sigma",
+              "wordId": "poiesis",
+              "distractorIds": [
+                "sigma",
+                "rho",
+                "nu"
+              ]
+            },
+            {
+              "id": "alphabet-thea-transliteration",
+              "task": "transliterar",
+              "sourceId": "thea"
+            },
+            {
+              "id": "alphabet-onoma-transliteration",
+              "task": "transliterar",
+              "sourceId": "onoma"
+            },
+            {
+              "id": "alphabet-mythos-transliteration",
+              "task": "transliterar",
+              "sourceId": "mythos"
+            },
+            {
+              "id": "alphabet-psyche-transliteration",
+              "task": "transliterar",
+              "sourceId": "psyche"
+            }
+          ],
+          "notes": [
+            "Transliterar es escribir las letras griegas con letras latinas; no equivale a pronunciarlas. θ → th, η → ē y ω → ō. Las rayas de ē/ō distinguen letras, no representan los acentos griegos.",
+            "Lectura de cierre: ἄνθρωπος significa «ser humano». La familia antropo- aparece en «antropología» y «antropomorfo».",
+            "κόσμος significa «orden», «adorno» y, por extensión, «mundo». «Cosmos» procede de esta palabra; «cosmético» pertenece a la misma familia a través de κοσμητικός, relativo al adorno, no es un préstamo directo de κόσμος.",
+            "φιλοσοφία significa «amor a la sabiduría» y da origen a «filosofía», a través del latín. Estas conexiones son material de consulta: no tendrás preguntas sobre sus significados."
+          ]
         }
       ]
     }

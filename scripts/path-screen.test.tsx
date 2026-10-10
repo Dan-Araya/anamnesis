@@ -117,8 +117,8 @@ test('las cápsulas no completadas conservan sus estados visibles', () => {
 
   assert.ok(screen.getByText('Continuar'))
   assert.ok(screen.getByText('Empezar'))
-  // Las seis cápsulas bloqueadas conservan su estado visible.
-  assert.equal(screen.getAllByText('Por desbloquear').length, 6)
+  // Las siete cápsulas bloqueadas conservan su estado visible.
+  assert.equal(screen.getAllByText('Por desbloquear').length, 7)
   assert.equal(screen.queryByText('Completada'), null)
 })
 

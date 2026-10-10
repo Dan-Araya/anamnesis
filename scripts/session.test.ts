@@ -427,9 +427,9 @@ test('la sesión de la cápsula 3 contiene solo su contenido fijo', () => {
   )
   assert.ok(queue.every((i) => presentadas.has(i.card)))
 
-  // Los ids únicos suman 62 en total: los 46 anteriores intactos más las 16
+  // Los ids únicos suman 69 en total: los 46 anteriores intactos más las 16
   // tarjetas nuevas de las cápsulas 7 y 8.
-  assert.equal(allCards.length, 62)
+  assert.equal(allCards.length, 69)
   const c1c2 = ['m01-s01-c01', 'm01-s01-c02']
     .flatMap((id) => cardsByCapsule.get(id) ?? [])
   assert.equal(c1c2.length, 14)
@@ -441,9 +441,9 @@ test('la sesión de la cápsula 3 contiene solo su contenido fijo', () => {
     'v:de:rec', 'v:de:trl',
   ]))
 
-  // Totales por cápsula: 6, 8, 8, 8, 8, 8, 8, 8.
+  // Totales por cápsula: 6, 8, 8, 8, 8, 8, 8, 8, 7.
   assert.deepEqual(
     path.map((n) => cardsByCapsule.get(n.capsule.id)!.length),
-    [6, 8, 8, 8, 8, 8, 8, 8],
+    [6, 8, 8, 8, 8, 8, 8, 8, 7],
   )
 })

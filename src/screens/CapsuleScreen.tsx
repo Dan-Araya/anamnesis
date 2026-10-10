@@ -1,4 +1,4 @@
-import { capsuleLabel, getNode, isEmpty, moduleLabel } from '@/content'
+import { lettersUpTo, capsuleLabel, getNode, isEmpty, moduleLabel } from '@/content'
 import { useStore } from '@/store'
 import ParadigmTable from '@/components/ParadigmTable'
 import CapsuleGreekLine from '@/components/CapsuleGreekLine'
@@ -73,6 +73,19 @@ export default function CapsuleScreen({
           {completed && ' Repetirla es práctica libre y no cambia tus estadísticas.'}
         </p>
       )}
+
+      {capsule.alphabetReference && <section>
+        <h2 className="screen__title" style={{ fontSize: '1.1rem' }}>Las 24 letras</h2>
+        <div className="card alphabet-reference">
+          <table><thead><tr><th>Formas</th><th>Nombre</th><th>Transliteración</th></tr></thead>
+            <tbody>{lettersUpTo(capsule.id).map(l => <tr key={l.id}>
+              <td className="griego">{l.uppercase} {l.lowercase}{l.finalForm && ` ${l.finalForm}`}</td>
+              <td>{l.name}</td><td>{l.transliteration}</td>
+            </tr>)}</tbody>
+          </table>
+          <p>σ se usa dentro de palabra; ς, al final. Son formas de sigma, no letras distintas.</p>
+        </div>
+      </section>}
 
       {capsule.letters.length > 0 && (
         <section>

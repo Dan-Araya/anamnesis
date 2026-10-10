@@ -1,5 +1,6 @@
 import type {
   Capsule,
+  ConsolidationQuestion,
   Card,
   Letter,
   ModuleContent,
@@ -63,7 +64,8 @@ export function isEmpty(c: Capsule): boolean {
     c.vocabulary.length === 0 &&
     c.paradigms.length === 0 &&
     c.sentences.length === 0 &&
-    c.drills.length === 0
+    c.drills.length === 0 &&
+    (c.consolidation?.length ?? 0) === 0
   )
 }
 
@@ -183,6 +185,10 @@ function cardsForCapsule(node: PathNode): Card[] {
     cards.push({ ...base, id: `d:${d.id}`, kind: 'tabla', sourceId: d.id })
   }
 
+  for (const q of node.capsule.consolidation ?? []) {
+    cards.push({ ...base, id: `q:${q.id}`, kind: 'consolidacion', sourceId: q.id })
+  }
+
   return cards
 }
 
@@ -264,4 +270,11 @@ export function vocabUpTo(capsuleId: string): VocabEntry[] {
     if (node.capsule.id === capsuleId) break
   }
   return out
+}
+
+const questionById = new Map<string, ConsolidationQuestion>(
+  path.flatMap(({ capsule }) => (capsule.consolidation ?? []).map(q => [q.id, q] as const)),
+)
+export function getQuestion(id: string): ConsolidationQuestion | undefined {
+  return questionById.get(id)
 }

@@ -53,10 +53,10 @@ test('las siete palabras con transliteración generan sus tarjetas', () => {
   )
 })
 
-test('hay exactamente 62 tarjetas, sin ids duplicados, y las 46 anteriores permanecen', () => {
+test('hay exactamente 69 tarjetas, sin ids duplicados, y las 46 anteriores permanecen', () => {
   const ids = allCards.map((c) => c.id)
-  assert.equal(ids.length, 62)
-  assert.equal(new Set(ids).size, 62)
+  assert.equal(ids.length, 69)
+  assert.equal(new Set(ids).size, 69)
 
   const anteriores = [
     'l:alpha:rec', 'l:alpha:pro', 'l:beta:rec', 'l:beta:pro',

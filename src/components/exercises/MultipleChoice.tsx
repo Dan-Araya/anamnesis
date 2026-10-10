@@ -1,3 +1,4 @@
+import DiacriticsNotice from '@/components/DiacriticsNotice'
 import { useMemo, useState } from 'react'
 import type { Grade } from '@/types'
 import { getVocab } from '@/content'
@@ -45,6 +46,7 @@ export default function MultipleChoice({
         </div>
         {showGreek ? (
           <>
+            <DiacriticsNotice capsuleId={item.card.capsuleId} word={vocab.greek} />
             <div className="prompt__greek griego">{vocab.greek}</div>
             {vocab.info && <div className="prompt__sub griego">{vocab.info}</div>}
           </>

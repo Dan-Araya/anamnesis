@@ -10,7 +10,8 @@
  */
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import type { Capsule, ModuleContent, Paradigm } from '../src/types'
+import type { Capsule, ModuleContent, Paradigm, Letter, VocabEntry } from '../src/types'
+import { resolveQuestion } from '../src/lib/consolidation'
 import { vocabDistractorLabels, type VocabLike } from '../src/lib/distractors'
 
 export interface ValidationResult {
@@ -46,6 +47,16 @@ export function validateModules(dir: string): ValidationResult {
   }
 
   function checkCapsule(capsule: Capsule, where: string) {
+    for (const q of capsule.consolidation ?? []) {
+      uniqueId(q.id, `${where} · consolidación`)
+      try {
+        const resolved = resolveQuestion(q, presentedLetters, previousVocab)
+        const options = [resolved.answer, ...resolved.distractors]
+        if (options.length !== 4 || options.some(o => !o.trim()) || new Set(options).size !== 4) {
+          errors.push(`${where}: «${q.id}» necesita una respuesta y tres alternativas distintas no vacías`)
+        }
+      } catch (e) { errors.push(`${where}: ${(e as Error).message}`) }
+    }
     for (const l of capsule.letters ?? []) {
       uniqueId(l.id, `${where} · letras`)
       if (!l.uppercase) errors.push(`${where}: la letra «${l.id}» no tiene mayúscula`)
@@ -253,6 +264,8 @@ export function validateModules(dir: string): ValidationResult {
   let capsuleCount = 0
   /** Vocabulario ya presentado, en orden del camino: limita los distractores. */
   const presentedVocab: VocabLike[] = []
+  const previousVocab: VocabEntry[] = []
+  const presentedLetters: Letter[] = []
 
   for (const file of files) {
     let module: ModuleContent
@@ -294,7 +307,8 @@ export function validateModules(dir: string): ValidationResult {
         uniqueId(capsule.id, where)
         checkCapsule(capsule, where)
         checkDistractors(capsule, where)
-        for (const v of capsule.vocabulary ?? []) presentedVocab.push(v)
+        for (const v of capsule.vocabulary ?? []) { presentedVocab.push(v); previousVocab.push(v) }
+        presentedLetters.push(...(capsule.letters ?? []))
       }
     }
   }

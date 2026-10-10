@@ -10,6 +10,7 @@ import {
   phaseOf,
   type SessionRun,
 } from '@/lib/session-run'
+import Consolidation from '@/components/exercises/Consolidation'
 import MultipleChoice from '@/components/exercises/MultipleChoice'
 import Flashcard from '@/components/exercises/Flashcard'
 import TypeAnswer from '@/components/exercises/TypeAnswer'
@@ -154,6 +155,8 @@ function Ejercicio({
   onGraded: (grade: Grade) => void
 }) {
   const { settings } = useStore()
+
+  if (item.card.kind === 'consolidacion') return <Consolidation item={item} onGraded={onGraded} />
 
   if (item.card.kind === 'letra-reconocer') {
     return <LetterRecognition item={item} onGraded={onGraded} />

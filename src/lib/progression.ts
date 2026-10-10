@@ -155,6 +155,7 @@ export function currentStatus(statuses: CapsuleStatus[]): CapsuleStatus | undefi
  */
 export function pickMode(card: Card, p: CardProgress): ExerciseMode {
   switch (card.kind) {
+    case 'consolidacion':
     case 'vocab-reconocer':
       // Siempre entre opciones: la respuesta es objetiva, nunca autoevaluada.
       return 'opcion-multiple'
@@ -187,6 +188,7 @@ export function pickMode(card: Card, p: CardProgress): ExerciseMode {
 /** Reglas del camino por tipo, independientes de la programación SRS. */
 export function pickCapsuleMode(card: Card): ExerciseMode {
   switch (card.kind) {
+    case 'consolidacion':
     case 'vocab-reconocer':
     case 'vocab-transliterar':
     case 'letra-reconocer':

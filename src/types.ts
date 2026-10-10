@@ -171,7 +171,22 @@ export interface Capsule {
    * Por eso deben llegar con todas las celdas rellenas.
    */
   drills: Paradigm[]
+  consolidation?: ConsolidationQuestion[]
+  /** Resumen consultable, sin generar tarjetas. */
+  alphabetReference?: boolean
 }
+
+/** Pregunta fija con identidad propia que referencia material ya presentado.
+ * No duplica letras ni vocabulario; las respuestas se derivan de la fuente.
+ */
+export type ConsolidationQuestion = {
+  id: string
+  sourceId: string
+} & (
+  | { task: 'minuscula' | 'nombre'; distractorIds: string[] }
+  | { task: 'final'; wordId: string; distractorIds: string[] }
+  | { task: 'transliterar' }
+)
 
 /** Un grupo de cápsulas dentro de un módulo. */
 export interface Section {
@@ -195,6 +210,7 @@ export interface ModuleContent {
 // ---------------------------------------------------------------------------
 
 export type CardKind =
+  | 'consolidacion'
   /** Ver el griego, recordar el significado. */
   | 'vocab-reconocer'
   /** Ver el español, producir el griego. */

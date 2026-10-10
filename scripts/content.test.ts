@@ -14,8 +14,8 @@ import {
 } from '../src/content'
 import { recognitionLabelOf } from '../src/lib/distractors'
 
-test('el camino muestra exclusivamente el módulo 1 con sus ocho cápsulas', () => {
-  assert.equal(path.length, 8)
+test('el camino muestra exclusivamente el módulo 1 con sus nueve cápsulas', () => {
+  assert.equal(path.length, 9)
   const [c1, c2, c3, c4, c5, c6, c7, c8] = path
   assert.equal(c1!.module.title, 'Leer el alfabeto')
   assert.equal(c1!.section.title, 'El alfabeto')
@@ -28,7 +28,7 @@ test('el camino muestra exclusivamente el módulo 1 con sus ocho cápsulas', () 
   assert.equal(c7!.capsule.title, 'Tau, upsilon y phi')
   assert.equal(c8!.capsule.title, 'Chi, psi y omega')
   // Ningún nodo del boilerplate ni cápsulas vacías en el recorrido.
-  assert.ok(path.every((n) => n.capsule.letters.length > 0))
+  assert.ok(path.every((n) => (cardsByCapsule.get(n.capsule.id)?.length ?? 0) > 0))
 })
 
 test('la cápsula 1 genera exactamente seis tarjetas con los ids previstos', () => {
@@ -144,7 +144,7 @@ test('la cápsula 8 genera exactamente ocho tarjetas con los ids previstos', () 
 test('no hay ids de tarjeta duplicados en todo el contenido', () => {
   const ids = allCards.map((c) => c.id)
   assert.equal(new Set(ids).size, ids.length)
-  assert.equal(ids.length, 62)
+  assert.equal(ids.length, 69)
 })
 
 test('los 30 ids anteriores permanecen intactos tras añadir las cápsulas 5 y 6', () => {

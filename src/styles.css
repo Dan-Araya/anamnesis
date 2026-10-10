@@ -997,3 +997,14 @@ textarea {
     animation: none !important;
   }
 }
+
+/* Aviso explicativo en el flujo de la pregunta, también visible en móvil. */
+.diacritics-notice { text-align: left; font-size: .9rem; line-height: 1.45; border: 1px solid var(--text); border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
+.diacritics-notice p { margin: 0 0 6px; }
+.diacritics-notice p:last-child { margin-bottom: 0; }
+.diacritics-example { font-size: 1.45rem; }
+.diacritics-key { display: flex; flex-direction: column; gap: 4px; }
+.diacritics-mark { display: inline-block; font-size: 2rem; line-height: 1; min-width: 1.4rem; text-align: center; border: 1px solid currentColor; border-radius: 4px; }
+.alphabet-reference table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.alphabet-reference th, .alphabet-reference td { text-align: left; padding: 5px 3px; }
+.alphabet-reference .griego { font-size: 1.35rem; }
